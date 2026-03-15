@@ -1,12 +1,14 @@
 import UIKit
 
-/// Login/connection screen — user enters WiFi SSID (SSE...) and connects to inverter
+/// Login/connection screen matching the Android app layout:
+/// Left: background image + title/version at bottom
+/// Center: BT NAME / BT PASSWORD form with underline fields
+/// Right: "Refresh the BT List" button + scanned SSE device list
 final class ConnectionViewController: UIViewController {
 
     // MARK: - Properties
 
     private let viewModel = ConnectionViewModel()
-    private var gradientLayer: CAGradientLayer?
 
     // MARK: - UI Elements
 
@@ -15,65 +17,69 @@ final class ConnectionViewController: UIViewController {
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
         iv.image = UIImage(named: "login_bg")
-        iv.alpha = 0.7
         return iv
+    }()
+
+    private let returnButton: UIButton = {
+        let btn = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 13, weight: .medium)
+        let chevron = UIImage(systemName: "chevron.left", withConfiguration: config)
+        btn.setImage(chevron, for: .normal)
+        btn.setTitle(" Return", for: .normal)
+        btn.setTitleColor(.white, for: .normal)
+        btn.tintColor = .white
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        btn.contentHorizontalAlignment = .left
+        return btn
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = AppConfig.appName
-        label.font = UIFont.systemFont(ofSize: 22, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: 20, weight: .bold)
         label.textColor = AppColors.textPrimary
-        label.textAlignment = .center
         label.numberOfLines = 2
         return label
     }()
 
     private let versionLabel: UILabel = {
         let label = UILabel()
-        label.text = "version: \(AppConfig.appVersion)"
+        label.text = "version:\(AppConfig.appVersion)"
         label.font = UIFont.systemFont(ofSize: 12)
         label.textColor = AppColors.textSecondary
         return label
     }()
 
-    private let formContainer: UIView = {
-        let view = UIView()
-        view.backgroundColor = AppColors.cardBackground.withAlphaComponent(0.95)
-        view.layer.cornerRadius = 12
-        return view
-    }()
+    // MARK: - Form Elements
 
-    private let wifiNameLabel: UILabel = {
+    private let formContainer = UIView()
+
+    private let btNameLabel: UILabel = {
         let label = UILabel()
-        label.text = "WiFi NAME:"
+        label.text = "BT NAME:"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         label.textColor = AppColors.textSecondary
         return label
     }()
 
-    private let wifiNameField: UITextField = {
-        let tf = UITextField()
-        tf.backgroundColor = AppColors.inputBackground
-        tf.textColor = AppColors.textPrimary
-        tf.font = UIFont.systemFont(ofSize: 15)
-        tf.layer.cornerRadius = 8
-        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 0))
-        tf.leftViewMode = .always
-        tf.placeholder = "Enter SSE... WiFi name"
-        tf.attributedPlaceholder = NSAttributedString(
-            string: "Enter SSE... WiFi name",
-            attributes: [.foregroundColor: UIColor(white: 0.4, alpha: 1)]
-        )
-        tf.autocorrectionType = .no
-        tf.autocapitalizationType = .allCharacters
-        tf.returnKeyType = .done
-        return tf
+    private let btNameValueLabel: UILabel = {
+        let label = UILabel()
+        label.text = ""
+        label.font = UIFont.systemFont(ofSize: 16)
+        label.textColor = AppColors.textPrimary
+        label.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        return label
     }()
 
-    private let wifiPasswordLabel: UILabel = {
+    private let btNameUnderline: UIView = {
+        let v = UIView()
+        v.backgroundColor = AppColors.separator
+        return v
+    }()
+
+    private let btPasswordLabel: UILabel = {
         let label = UILabel()
-        label.text = "WiFi PASSWORD:"
+        label.text = "BT PASSWORD:"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         label.textColor = AppColors.textSecondary
         return label
@@ -81,58 +87,80 @@ final class ConnectionViewController: UIViewController {
 
     private let passwordField: UITextField = {
         let tf = UITextField()
-        tf.backgroundColor = AppColors.inputBackground
+        tf.backgroundColor = .clear
         tf.textColor = AppColors.textPrimary
-        tf.font = UIFont.systemFont(ofSize: 15)
-        tf.layer.cornerRadius = 8
+        tf.font = UIFont.systemFont(ofSize: 16)
         tf.isSecureTextEntry = true
         tf.text = AppConfig.defaultPassword
-        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 0))
-        tf.leftViewMode = .always
+        tf.borderStyle = .none
         return tf
     }()
 
     private let togglePasswordButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setImage(UIImage(systemName: "eye.slash.fill"), for: .normal)
+        let config = UIImage.SymbolConfiguration(pointSize: 16)
+        btn.setImage(UIImage(systemName: "eye.slash.fill", withConfiguration: config), for: .normal)
         btn.tintColor = AppColors.textSecondary
         return btn
+    }()
+
+    private let passwordUnderline: UIView = {
+        let v = UIView()
+        v.backgroundColor = AppColors.separator
+        return v
     }()
 
     private let connectButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("Click to connect", for: .normal)
-        btn.setTitleColor(.white, for: .normal)
-        btn.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        btn.backgroundColor = AppColors.accent
-        btn.layer.cornerRadius = 25
+        btn.setTitleColor(AppColors.accent, for: .normal)
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
+        btn.backgroundColor = .clear
+        btn.layer.cornerRadius = 20
+        btn.layer.borderWidth = 1.5
+        btn.layer.borderColor = AppColors.accent.cgColor
         return btn
     }()
 
-    private let wifiIcon: UIImageView = {
-        let iv = UIImageView()
-        iv.image = UIImage(systemName: "wifi")
-        iv.tintColor = UIColor.systemBlue
-        iv.contentMode = .scaleAspectFit
-        return iv
-    }()
+    // MARK: - Right Panel (Device List)
 
-    private let hintLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Look for WiFi starting with SSE"
-        label.font = UIFont.systemFont(ofSize: 12)
-        label.textColor = AppColors.textSecondary
-        return label
+    private let rightPanel: UIView = {
+        let v = UIView()
+        v.backgroundColor = UIColor(white: 0.93, alpha: 1.0)
+        return v
     }()
 
     private let refreshButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setTitle(" Search WiFi", for: .normal)
-        btn.setImage(UIImage(systemName: "arrow.clockwise"), for: .normal)
-        btn.tintColor = AppColors.textPrimary
-        btn.setTitleColor(AppColors.textPrimary, for: .normal)
-        btn.titleLabel?.font = UIFont.systemFont(ofSize: 13)
+        btn.tintColor = .darkGray
+        btn.contentHorizontalAlignment = .center
         return btn
+    }()
+
+    private let refreshSeparator: UIView = {
+        let v = UIView()
+        v.backgroundColor = UIColor(white: 0.82, alpha: 1.0)
+        return v
+    }()
+
+    private lazy var deviceTableView: UITableView = {
+        let tv = UITableView(frame: .zero, style: .plain)
+        tv.backgroundColor = .clear
+        tv.delegate = self
+        tv.dataSource = self
+        tv.register(DeviceListCell.self, forCellReuseIdentifier: DeviceListCell.reuseID)
+        tv.separatorColor = UIColor(white: 0.82, alpha: 1.0)
+        tv.separatorInset = UIEdgeInsets(top: 0, left: 40, bottom: 0, right: 0)
+        tv.rowHeight = 48
+        return tv
+    }()
+
+    /// Scanning spinner in right panel
+    private let scanningIndicator: UIActivityIndicatorView = {
+        let ai = UIActivityIndicatorView(style: .medium)
+        ai.color = .darkGray
+        ai.hidesWhenStopped = true
+        return ai
     }()
 
     private let loadingView = LoadingView()
@@ -144,17 +172,12 @@ final class ConnectionViewController: UIViewController {
         setupUI()
         setupActions()
         viewModel.delegate = self
-        wifiNameField.delegate = self
+        updateRefreshButtonTitle(count: 0)
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
-    }
-
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        gradientLayer?.frame = connectButton.bounds
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask { .landscape }
@@ -165,74 +188,117 @@ final class ConnectionViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = AppColors.background
 
-        [backgroundImageView, versionLabel, titleLabel, formContainer,
-         wifiIcon, hintLabel, refreshButton, loadingView].forEach {
+        [backgroundImageView, returnButton, titleLabel, versionLabel,
+         formContainer, rightPanel, loadingView].forEach {
             view.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
 
-        [wifiNameLabel, wifiNameField, wifiPasswordLabel, passwordField,
-         togglePasswordButton, connectButton].forEach {
+        [btNameLabel, btNameValueLabel, btNameUnderline,
+         btPasswordLabel, passwordField, togglePasswordButton, passwordUnderline,
+         connectButton].forEach {
             formContainer.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
 
+        [refreshButton, refreshSeparator, scanningIndicator, deviceTableView].forEach {
+            rightPanel.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+
+        let panelWidth: CGFloat = 200
+
         NSLayoutConstraint.activate([
+            // Right panel
+            rightPanel.topAnchor.constraint(equalTo: view.topAnchor),
+            rightPanel.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            rightPanel.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            rightPanel.widthAnchor.constraint(equalToConstant: panelWidth),
+
+            // Refresh button
+            refreshButton.topAnchor.constraint(equalTo: rightPanel.safeAreaLayoutGuide.topAnchor, constant: 10),
+            refreshButton.leadingAnchor.constraint(equalTo: rightPanel.leadingAnchor, constant: 8),
+            refreshButton.trailingAnchor.constraint(equalTo: rightPanel.trailingAnchor, constant: -8),
+            refreshButton.heightAnchor.constraint(equalToConstant: 36),
+
+            refreshSeparator.topAnchor.constraint(equalTo: refreshButton.bottomAnchor, constant: 6),
+            refreshSeparator.leadingAnchor.constraint(equalTo: rightPanel.leadingAnchor),
+            refreshSeparator.trailingAnchor.constraint(equalTo: rightPanel.trailingAnchor),
+            refreshSeparator.heightAnchor.constraint(equalToConstant: 0.5),
+
+            scanningIndicator.centerYAnchor.constraint(equalTo: refreshButton.centerYAnchor),
+            scanningIndicator.trailingAnchor.constraint(equalTo: rightPanel.trailingAnchor, constant: -12),
+
+            deviceTableView.topAnchor.constraint(equalTo: refreshSeparator.bottomAnchor),
+            deviceTableView.leadingAnchor.constraint(equalTo: rightPanel.leadingAnchor),
+            deviceTableView.trailingAnchor.constraint(equalTo: rightPanel.trailingAnchor),
+            deviceTableView.bottomAnchor.constraint(equalTo: rightPanel.bottomAnchor),
+
+            // Background image — left portion
             backgroundImageView.topAnchor.constraint(equalTo: view.topAnchor),
             backgroundImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             backgroundImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            backgroundImageView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.55),
+            backgroundImageView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.50),
 
-            versionLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
-            versionLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            // Return button — top left
+            returnButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 4),
+            returnButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 12),
+            returnButton.heightAnchor.constraint(equalToConstant: 30),
 
-            titleLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -20),
+            // Title — bottom left
+            titleLabel.bottomAnchor.constraint(equalTo: versionLabel.topAnchor, constant: -4),
             titleLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            titleLabel.widthAnchor.constraint(equalToConstant: 220),
+            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: formContainer.leadingAnchor, constant: -10),
 
-            formContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -20),
-            formContainer.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -30),
-            formContainer.widthAnchor.constraint(equalToConstant: 320),
+            // Version — bottom left
+            versionLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -8),
+            versionLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
 
-            wifiNameLabel.topAnchor.constraint(equalTo: formContainer.topAnchor, constant: 20),
-            wifiNameLabel.leadingAnchor.constraint(equalTo: formContainer.leadingAnchor, constant: 20),
+            // Form container — between image and right panel
+            formContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -10),
+            formContainer.leadingAnchor.constraint(equalTo: backgroundImageView.trailingAnchor, constant: 24),
+            formContainer.trailingAnchor.constraint(equalTo: rightPanel.leadingAnchor, constant: -24),
 
-            wifiNameField.topAnchor.constraint(equalTo: wifiNameLabel.bottomAnchor, constant: 6),
-            wifiNameField.leadingAnchor.constraint(equalTo: formContainer.leadingAnchor, constant: 20),
-            wifiNameField.trailingAnchor.constraint(equalTo: formContainer.trailingAnchor, constant: -20),
-            wifiNameField.heightAnchor.constraint(equalToConstant: 40),
+            // BT NAME
+            btNameLabel.topAnchor.constraint(equalTo: formContainer.topAnchor),
+            btNameLabel.leadingAnchor.constraint(equalTo: formContainer.leadingAnchor),
 
-            wifiPasswordLabel.topAnchor.constraint(equalTo: wifiNameField.bottomAnchor, constant: 14),
-            wifiPasswordLabel.leadingAnchor.constraint(equalTo: formContainer.leadingAnchor, constant: 20),
+            btNameValueLabel.topAnchor.constraint(equalTo: btNameLabel.bottomAnchor, constant: 8),
+            btNameValueLabel.leadingAnchor.constraint(equalTo: formContainer.leadingAnchor),
+            btNameValueLabel.trailingAnchor.constraint(equalTo: formContainer.trailingAnchor),
 
-            passwordField.topAnchor.constraint(equalTo: wifiPasswordLabel.bottomAnchor, constant: 6),
-            passwordField.leadingAnchor.constraint(equalTo: formContainer.leadingAnchor, constant: 20),
-            passwordField.trailingAnchor.constraint(equalTo: formContainer.trailingAnchor, constant: -50),
-            passwordField.heightAnchor.constraint(equalToConstant: 40),
+            btNameUnderline.topAnchor.constraint(equalTo: btNameValueLabel.bottomAnchor, constant: 8),
+            btNameUnderline.leadingAnchor.constraint(equalTo: formContainer.leadingAnchor),
+            btNameUnderline.trailingAnchor.constraint(equalTo: formContainer.trailingAnchor),
+            btNameUnderline.heightAnchor.constraint(equalToConstant: 0.5),
+
+            // BT PASSWORD
+            btPasswordLabel.topAnchor.constraint(equalTo: btNameUnderline.bottomAnchor, constant: 20),
+            btPasswordLabel.leadingAnchor.constraint(equalTo: formContainer.leadingAnchor),
+
+            passwordField.topAnchor.constraint(equalTo: btPasswordLabel.bottomAnchor, constant: 8),
+            passwordField.leadingAnchor.constraint(equalTo: formContainer.leadingAnchor),
+            passwordField.trailingAnchor.constraint(equalTo: togglePasswordButton.leadingAnchor, constant: -8),
+            passwordField.heightAnchor.constraint(equalToConstant: 24),
 
             togglePasswordButton.centerYAnchor.constraint(equalTo: passwordField.centerYAnchor),
-            togglePasswordButton.leadingAnchor.constraint(equalTo: passwordField.trailingAnchor, constant: 4),
-            togglePasswordButton.trailingAnchor.constraint(equalTo: formContainer.trailingAnchor, constant: -16),
+            togglePasswordButton.trailingAnchor.constraint(equalTo: formContainer.trailingAnchor),
             togglePasswordButton.widthAnchor.constraint(equalToConstant: 30),
+            togglePasswordButton.heightAnchor.constraint(equalToConstant: 30),
 
-            connectButton.topAnchor.constraint(equalTo: passwordField.bottomAnchor, constant: 24),
-            connectButton.leadingAnchor.constraint(equalTo: formContainer.leadingAnchor, constant: 40),
-            connectButton.trailingAnchor.constraint(equalTo: formContainer.trailingAnchor, constant: -40),
-            connectButton.heightAnchor.constraint(equalToConstant: 50),
-            connectButton.bottomAnchor.constraint(equalTo: formContainer.bottomAnchor, constant: -20),
+            passwordUnderline.topAnchor.constraint(equalTo: passwordField.bottomAnchor, constant: 8),
+            passwordUnderline.leadingAnchor.constraint(equalTo: formContainer.leadingAnchor),
+            passwordUnderline.trailingAnchor.constraint(equalTo: formContainer.trailingAnchor),
+            passwordUnderline.heightAnchor.constraint(equalToConstant: 0.5),
 
-            wifiIcon.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -12),
-            wifiIcon.trailingAnchor.constraint(equalTo: refreshButton.leadingAnchor, constant: -6),
-            wifiIcon.widthAnchor.constraint(equalToConstant: 20),
-            wifiIcon.heightAnchor.constraint(equalToConstant: 20),
+            // Connect button
+            connectButton.topAnchor.constraint(equalTo: passwordUnderline.bottomAnchor, constant: 28),
+            connectButton.centerXAnchor.constraint(equalTo: formContainer.centerXAnchor),
+            connectButton.widthAnchor.constraint(equalToConstant: 180),
+            connectButton.heightAnchor.constraint(equalToConstant: 40),
+            connectButton.bottomAnchor.constraint(equalTo: formContainer.bottomAnchor),
 
-            hintLabel.centerYAnchor.constraint(equalTo: wifiIcon.centerYAnchor),
-            hintLabel.trailingAnchor.constraint(equalTo: wifiIcon.leadingAnchor, constant: -8),
-
-            refreshButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -8),
-            refreshButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            refreshButton.heightAnchor.constraint(equalToConstant: 30),
-
+            // Loading overlay
             loadingView.topAnchor.constraint(equalTo: view.topAnchor),
             loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -240,43 +306,68 @@ final class ConnectionViewController: UIViewController {
         ])
 
         loadingView.isHidden = true
-
-        let gradient = CAGradientLayer()
-        gradient.colors = [AppColors.accentGradientStart.cgColor, AppColors.accentGradientEnd.cgColor]
-        gradient.startPoint = CGPoint(x: 0, y: 0.5)
-        gradient.endPoint = CGPoint(x: 1, y: 0.5)
-        gradient.cornerRadius = 25
-        connectButton.layer.insertSublayer(gradient, at: 0)
-        gradientLayer = gradient
     }
 
     private func setupActions() {
         connectButton.addTarget(self, action: #selector(connectTapped), for: .touchUpInside)
         refreshButton.addTarget(self, action: #selector(refreshTapped), for: .touchUpInside)
         togglePasswordButton.addTarget(self, action: #selector(togglePasswordVisibility), for: .touchUpInside)
+        returnButton.addTarget(self, action: #selector(returnTapped), for: .touchUpInside)
 
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
     }
 
+    // MARK: - Helpers
+
+    private func updateRefreshButtonTitle(count: Int) {
+        let icon = UIImage(systemName: "arrow.clockwise")?
+            .withTintColor(.darkGray, renderingMode: .alwaysOriginal)
+            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 13, weight: .medium))
+        let attachment = NSTextAttachment()
+        attachment.image = icon
+
+        let text: String
+        if count > 0 {
+            text = "  Refresh the BT List(\(count))"
+        } else {
+            text = "  Refresh the BT List"
+        }
+
+        let attrStr = NSMutableAttributedString(attachment: attachment)
+        attrStr.append(NSAttributedString(
+            string: text,
+            attributes: [
+                .foregroundColor: UIColor.darkGray,
+                .font: UIFont.systemFont(ofSize: 13, weight: .medium)
+            ]
+        ))
+        refreshButton.setAttributedTitle(attrStr, for: .normal)
+    }
+
     // MARK: - Actions
 
     @objc private func connectTapped() {
         dismissKeyboard()
-        let ssid = wifiNameField.text?.trimmingCharacters(in: .whitespaces) ?? ""
+        let ssid = btNameValueLabel.text?.trimmingCharacters(in: .whitespaces) ?? ""
         let password = passwordField.text ?? AppConfig.defaultPassword
         viewModel.connect(ssid: ssid, password: password, from: self)
     }
 
     @objc private func refreshTapped() {
-        viewModel.openWiFiSettings()
+        viewModel.refreshDeviceList()
     }
 
     @objc private func togglePasswordVisibility() {
         passwordField.isSecureTextEntry.toggle()
         let iconName = passwordField.isSecureTextEntry ? "eye.slash.fill" : "eye.fill"
-        togglePasswordButton.setImage(UIImage(systemName: iconName), for: .normal)
+        let config = UIImage.SymbolConfiguration(pointSize: 16)
+        togglePasswordButton.setImage(UIImage(systemName: iconName, withConfiguration: config), for: .normal)
+    }
+
+    @objc private func returnTapped() {
+        // First page — nothing to go back to
     }
 
     @objc private func dismissKeyboard() {
@@ -301,6 +392,24 @@ final class ConnectionViewController: UIViewController {
 
 extension ConnectionViewController: ConnectionViewModelDelegate {
 
+    func didStartScanning() {
+        scanningIndicator.startAnimating()
+        deviceTableView.reloadData()
+    }
+
+    func didStopScanning() {
+        scanningIndicator.stopAnimating()
+    }
+
+    func didDiscoverDevice(at index: Int) {
+        let indexPath = IndexPath(row: index, section: 0)
+        deviceTableView.insertRows(at: [indexPath], with: .automatic)
+    }
+
+    func didUpdateRefreshCount(_ count: Int) {
+        updateRefreshButtonTitle(count: count)
+    }
+
     func didStartConnecting() {
         loadingView.show(message: "Wifi connecting")
     }
@@ -317,14 +426,91 @@ extension ConnectionViewController: ConnectionViewModelDelegate {
         loadingView.hide()
         showAlert(title: "Connection Failed", message: error)
     }
+
+    func didBluetoothStateChange(isAvailable: Bool, message: String?) {
+        if !isAvailable, let message = message {
+            showAlert(title: "Bluetooth", message: message)
+        }
+    }
 }
 
-// MARK: - UITextFieldDelegate
+// MARK: - UITableView DataSource & Delegate
 
-extension ConnectionViewController: UITextFieldDelegate {
+extension ConnectionViewController: UITableViewDataSource, UITableViewDelegate {
 
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        return true
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return viewModel.sseDevices.count
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: DeviceListCell.reuseID, for: indexPath) as? DeviceListCell else {
+            return UITableViewCell()
+        }
+        let device = viewModel.sseDevices[indexPath.row]
+        cell.configure(name: device.name)
+        return cell
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        viewModel.selectDevice(at: indexPath.row)
+        let device = viewModel.sseDevices[indexPath.row]
+        btNameValueLabel.text = device.name
+        passwordField.text = AppConfig.defaultPassword
+    }
+}
+
+// MARK: - DeviceListCell
+
+/// Custom cell for the right-side device list, showing a BT icon + device name
+final class DeviceListCell: UITableViewCell {
+
+    static let reuseID = "DeviceListCell"
+
+    private let btIcon: UIImageView = {
+        let iv = UIImageView()
+        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
+        iv.image = UIImage(systemName: "dot.radiowaves.left.and.right", withConfiguration: config)
+        iv.tintColor = .systemBlue
+        iv.contentMode = .scaleAspectFit
+        return iv
+    }()
+
+    private let nameLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        label.textColor = .darkGray
+        return label
+    }()
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        backgroundColor = .clear
+
+        let selectedBg = UIView()
+        selectedBg.backgroundColor = AppColors.accent.withAlphaComponent(0.12)
+        selectedBackgroundView = selectedBg
+
+        [btIcon, nameLabel].forEach {
+            contentView.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+
+        NSLayoutConstraint.activate([
+            btIcon.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12),
+            btIcon.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            btIcon.widthAnchor.constraint(equalToConstant: 24),
+            btIcon.heightAnchor.constraint(equalToConstant: 24),
+
+            nameLabel.leadingAnchor.constraint(equalTo: btIcon.trailingAnchor, constant: 8),
+            nameLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            nameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
+        ])
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    func configure(name: String) {
+        nameLabel.text = name
     }
 }
