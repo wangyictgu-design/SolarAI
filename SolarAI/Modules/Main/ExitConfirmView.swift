@@ -1,15 +1,22 @@
 import UIKit
+import SnapKit
 
+/// 退出確認對話框委託協定
 protocol ExitConfirmViewDelegate: AnyObject {
-    func exitConfirmViewDidCancel(_ view: ExitConfirmView)
-    func exitConfirmViewDidConfirm(_ view: ExitConfirmView)
+    /// 使用者點擊取消
+    func didCancel(_ view: ExitConfirmView)
+    /// 使用者點擊確認
+    func didConfirm(_ view: ExitConfirmView)
 }
 
-/// Modal dialog asking "Whether to exit the current device"
+/// 模態對話框，詢問「是否退出當前設備」
 final class ExitConfirmView: UIView {
 
     weak var delegate: ExitConfirmViewDelegate?
 
+    // MARK: - 子視圖
+
+    /// 中央白色圓角容器
     private let containerView: UIView = {
         let v = UIView()
         v.backgroundColor = AppColors.cardBackground
@@ -17,6 +24,7 @@ final class ExitConfirmView: UIView {
         return v
     }()
 
+    /// 標題文字：「是否退出當前設備」
     private let messageLabel: UILabel = {
         let label = UILabel()
         label.text = "Whether to exit the current device"
@@ -27,18 +35,21 @@ final class ExitConfirmView: UIView {
         return label
     }()
 
+    /// 水平分隔線
     private let separatorLine: UIView = {
         let v = UIView()
         v.backgroundColor = AppColors.separator
         return v
     }()
 
+    /// 垂直分隔線（按鈕之間）
     private let verticalSeparator: UIView = {
         let v = UIView()
         v.backgroundColor = AppColors.separator
         return v
     }()
 
+    /// 取消按鈕
     private let cancelButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("Cancel", for: .normal)
@@ -47,13 +58,16 @@ final class ExitConfirmView: UIView {
         return btn
     }()
 
+    /// 確認按鈕（橘色／強調色）
     private let confirmButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("Confirm", for: .normal)
-        btn.setTitleColor(AppColors.confirm, for: .normal)
+        btn.setTitleColor(AppColors.accent, for: .normal)
         btn.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
         return btn
     }()
+
+    // MARK: - 初始化
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -67,46 +81,54 @@ final class ExitConfirmView: UIView {
         setupActions()
     }
 
+    // MARK: - 佈局
+
     private func setupUI() {
         backgroundColor = UIColor.black.withAlphaComponent(0.5)
 
         addSubview(containerView)
         [messageLabel, separatorLine, cancelButton, confirmButton, verticalSeparator].forEach {
             containerView.addSubview($0)
-            $0.translatesAutoresizingMaskIntoConstraints = false
         }
-        containerView.translatesAutoresizingMaskIntoConstraints = false
 
-        NSLayoutConstraint.activate([
-            containerView.centerXAnchor.constraint(equalTo: centerXAnchor),
-            containerView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            containerView.widthAnchor.constraint(equalToConstant: 300),
+        containerView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.equalTo(300)
+        }
 
-            messageLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 28),
-            messageLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
-            messageLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+        messageLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(28)
+            make.leading.equalToSuperview().offset(20)
+            make.trailing.equalToSuperview().offset(-20)
+        }
 
-            separatorLine.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 24),
-            separatorLine.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            separatorLine.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            separatorLine.heightAnchor.constraint(equalToConstant: 0.5),
+        separatorLine.snp.makeConstraints { make in
+            make.top.equalTo(messageLabel.snp.bottom).offset(24)
+            make.leading.trailing.equalToSuperview()
+            make.height.equalTo(0.5)
+        }
 
-            cancelButton.topAnchor.constraint(equalTo: separatorLine.bottomAnchor),
-            cancelButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            cancelButton.trailingAnchor.constraint(equalTo: containerView.centerXAnchor),
-            cancelButton.heightAnchor.constraint(equalToConstant: 48),
-            cancelButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+        cancelButton.snp.makeConstraints { make in
+            make.top.equalTo(separatorLine.snp.bottom)
+            make.leading.equalToSuperview()
+            make.trailing.equalTo(containerView.snp.centerX)
+            make.height.equalTo(48)
+            make.bottom.equalToSuperview()
+        }
 
-            confirmButton.topAnchor.constraint(equalTo: separatorLine.bottomAnchor),
-            confirmButton.leadingAnchor.constraint(equalTo: containerView.centerXAnchor),
-            confirmButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            confirmButton.heightAnchor.constraint(equalToConstant: 48),
+        confirmButton.snp.makeConstraints { make in
+            make.top.equalTo(separatorLine.snp.bottom)
+            make.leading.equalTo(containerView.snp.centerX)
+            make.trailing.equalToSuperview()
+            make.height.equalTo(48)
+        }
 
-            verticalSeparator.topAnchor.constraint(equalTo: separatorLine.bottomAnchor),
-            verticalSeparator.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-            verticalSeparator.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-            verticalSeparator.widthAnchor.constraint(equalToConstant: 0.5),
-        ])
+        verticalSeparator.snp.makeConstraints { make in
+            make.top.equalTo(separatorLine.snp.bottom)
+            make.bottom.equalToSuperview()
+            make.centerX.equalToSuperview()
+            make.width.equalTo(0.5)
+        }
     }
 
     private func setupActions() {
@@ -114,22 +136,29 @@ final class ExitConfirmView: UIView {
         confirmButton.addTarget(self, action: #selector(confirmTapped), for: .touchUpInside)
     }
 
+    // MARK: - 按鈕事件
+
     @objc private func cancelTapped() {
-        delegate?.exitConfirmViewDidCancel(self)
+        delegate?.didCancel(self)
     }
 
     @objc private func confirmTapped() {
-        delegate?.exitConfirmViewDidConfirm(self)
+        delegate?.didConfirm(self)
     }
 
+    // MARK: - 公開方法
+
+    /// 在指定父視圖中顯示
     func show(in parentView: UIView) {
         parentView.addSubview(self)
-        translatesAutoresizingMaskIntoConstraints = false
-        pinToSuperview()
+        snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
         alpha = 0
         UIView.animate(withDuration: 0.25) { self.alpha = 1 }
     }
 
+    /// 關閉並移除
     func dismiss() {
         UIView.animate(withDuration: 0.2, animations: {
             self.alpha = 0

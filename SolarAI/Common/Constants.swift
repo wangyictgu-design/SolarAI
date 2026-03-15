@@ -1,6 +1,6 @@
 import UIKit
 
-// MARK: - App Configuration
+// MARK: - 應用程式設定
 
 enum AppConfig {
     static let appName = "Solar AI Inverter Setup APP"
@@ -10,7 +10,7 @@ enum AppConfig {
     static let dataRefreshInterval: TimeInterval = 3.0
 }
 
-// MARK: - API Endpoints
+// MARK: - API 端點
 
 enum APIEndpoint {
     static let general = "/general.do"
@@ -20,7 +20,7 @@ enum APIEndpoint {
     static let showInfo = "/showInfo.do"
 }
 
-// MARK: - Colors
+// MARK: - 顏色
 
 enum AppColors {
     static let background = UIColor(hex: "#1a343d")
@@ -38,9 +38,9 @@ enum AppColors {
     static let inputBackground = UIColor(hex: "#253545")
 }
 
-// MARK: - Hardware Icon Names
+// MARK: - 硬體圖示名稱
 
-/// Maps hardware feature names to their icon asset names (gray/orange pairs)
+/// 將硬體功能名稱對應至圖示資源名稱（灰/橘色配對）
 enum HardwareIcon: Int, CaseIterable {
     case heartbeat = 0
     case bluetooth
@@ -88,15 +88,15 @@ enum HardwareIcon: Int, CaseIterable {
         return "hw_orange_\(rawValue)"
     }
 
-    /// Bit position in the status flag (from right, 0-indexed)
+    /// 狀態旗標中的位元位置（從右邊算起，0 為起始索引）
     var statusBit: Int {
         return rawValue
     }
 }
 
-// MARK: - Flow Animation
+// MARK: - 能量流向動畫
 
-/// Maps arrow_flag bit patterns to animation image set names
+/// 將 arrow_flag 位元模式對應至動畫圖片集名稱
 enum EnergyFlowType: String {
     case noConnect       = "no_connect"
     case battToLoad      = "b_inver_l"
@@ -121,9 +121,9 @@ enum EnergyFlowType: String {
     }
 }
 
-// MARK: - Animation Duration
+// MARK: - 動畫時長
 
 enum AnimationConfig {
     static let flowFrameDuration: TimeInterval = 0.5
-    static let flowAnimationRepeat: Int = 0  // 0 = infinite
+    static let flowAnimationRepeat: Int = 0  // 0 = 無限循環
 }

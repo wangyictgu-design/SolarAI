@@ -1,52 +1,61 @@
 import UIKit
+import SnapKit
 
-/// General tab — displays connection state, hardware module grid, and device version
+/// General 標籤頁 — 顯示連接狀態、硬體模組網格、設備版本
 final class GeneralViewController: UIViewController {
 
-    // MARK: - Properties
+    // MARK: - 屬性
 
     private let viewModel = GeneralViewModel()
     private let deviceName: String
 
-    // MARK: - UI Elements
+    // MARK: - UI 元件
 
     private let scrollView = UIScrollView()
     private let contentStack = UIStackView()
 
-    // Connect State Section
+    /// 連接狀態區段標題
     private let connectStateHeader = SectionHeaderView(title: "Connect state")
-    private let heartbeatIcon: UIImageView = {
-        let iv = UIImageView()
-        iv.image = UIImage(named: "hw_orange_0") // heartbeat orange
-        iv.contentMode = .scaleAspectFit
-        return iv
-    }()
-    private let heartbeatLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Heartbeat"
-        label.font = UIFont.systemFont(ofSize: 13, weight: .medium)
-        label.textColor = AppColors.accent
-        return label
-    }()
 
-    // Hardware State Section
-    private let hardwareStateHeader = SectionHeaderView(title: "Hardware state")
-    private lazy var collectionView: UICollectionView = {
+    /// 連接狀態圖示網格（Heartbeat, Bluetooth, WiFi, 4G, GPS）
+    private lazy var connectCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
-        layout.minimumLineSpacing = 8
-        layout.minimumInteritemSpacing = 8
+        layout.minimumLineSpacing = 6
+        layout.minimumInteritemSpacing = 6
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .clear
         cv.dataSource = self
         cv.delegate = self
+        cv.tag = 0
         cv.register(HardwareStatusCell.self, forCellWithReuseIdentifier: HardwareStatusCell.reuseIdentifier)
         cv.isScrollEnabled = false
         return cv
     }()
 
-    // BaseInfo Section
+    /// 硬體狀態區段標題
+    private let hardwareStateHeader = SectionHeaderView(title: "Hardware state")
+
+    /// 硬體狀態圖示網格（PV Input, Load, Battery 等）
+    private lazy var hardwareCollectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .vertical
+        layout.minimumLineSpacing = 6
+        layout.minimumInteritemSpacing = 6
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        cv.backgroundColor = .clear
+        cv.dataSource = self
+        cv.delegate = self
+        cv.tag = 1
+        cv.register(HardwareStatusCell.self, forCellWithReuseIdentifier: HardwareStatusCell.reuseIdentifier)
+        cv.isScrollEnabled = false
+        return cv
+    }()
+
+    /// 基本資訊區段標題
     private let baseInfoHeader = SectionHeaderView(title: "BaseInfo")
+
+    /// 設備版本標籤
     private let versionLabel: UILabel = {
         let label = UILabel()
         label.text = "Device version: --"
@@ -55,7 +64,17 @@ final class GeneralViewController: UIViewController {
         return label
     }()
 
-    // MARK: - Init
+    /// 連接狀態的圖示（前 5 個：Heartbeat ~ GPS）
+    private var connectIcons: [HardwareIcon] {
+        return Array(HardwareIcon.allCases.prefix(5))
+    }
+
+    /// 硬體狀態的圖示（後 11 個：PV Input ~ CT）
+    private var hardwareIcons: [HardwareIcon] {
+        return Array(HardwareIcon.allCases.dropFirst(5))
+    }
+
+    // MARK: - 初始化
 
     init(deviceName: String) {
         self.deviceName = deviceName
@@ -66,7 +85,7 @@ final class GeneralViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Lifecycle
+    // MARK: - 生命週期
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -85,45 +104,42 @@ final class GeneralViewController: UIViewController {
         viewModel.stopPolling()
     }
 
-    // MARK: - UI Setup
+    // MARK: - UI 佈局
 
     private func setupUI() {
         scrollView.showsVerticalScrollIndicator = false
         view.addSubview(scrollView)
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.pinToSuperview()
+        scrollView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
 
         contentStack.axis = .vertical
-        contentStack.spacing = 16
+        contentStack.spacing = 6
         contentStack.alignment = .fill
         scrollView.addSubview(contentStack)
-        contentStack.translatesAutoresizingMaskIntoConstraints = false
+        contentStack.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(12)
+            make.leading.equalToSuperview().offset(20)
+            make.trailing.equalToSuperview().offset(-20)
+            make.bottom.equalToSuperview().offset(-12)
+            make.width.equalTo(scrollView).offset(-40)
+        }
 
-        NSLayoutConstraint.activate([
-            contentStack.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 16),
-            contentStack.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 20),
-            contentStack.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -20),
-            contentStack.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -16),
-            contentStack.widthAnchor.constraint(equalTo: scrollView.widthAnchor, constant: -40),
-        ])
-
-        // Connect State
-        let heartbeatRow = UIStackView(arrangedSubviews: [heartbeatIcon, heartbeatLabel])
-        heartbeatRow.axis = .horizontal
-        heartbeatRow.spacing = 8
-        heartbeatRow.alignment = .center
-        heartbeatIcon.setSize(width: 32, height: 32)
-
+        // 連接狀態區段（5 個圖示 → 1 行）
         contentStack.addArrangedSubview(connectStateHeader)
-        contentStack.addArrangedSubview(heartbeatRow)
+        contentStack.addArrangedSubview(connectCollectionView)
+        connectCollectionView.snp.makeConstraints { make in
+            make.height.equalTo(70)
+        }
 
-        // Hardware State
+        // 硬體狀態區段（11 個圖示 → 2 行）
         contentStack.addArrangedSubview(hardwareStateHeader)
-        contentStack.addArrangedSubview(collectionView)
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView.heightAnchor.constraint(equalToConstant: 280).isActive = true
+        contentStack.addArrangedSubview(hardwareCollectionView)
+        hardwareCollectionView.snp.makeConstraints { make in
+            make.height.equalTo(145)
+        }
 
-        // BaseInfo
+        // 基本資訊區段
         contentStack.addArrangedSubview(baseInfoHeader)
         contentStack.addArrangedSubview(versionLabel)
     }
@@ -135,30 +151,28 @@ extension GeneralViewController: GeneralViewModelDelegate {
 
     func generalViewModelDidUpdateData(_ viewModel: GeneralViewModel) {
         versionLabel.text = "Device version: \(viewModel.deviceVersion)"
-        heartbeatIcon.image = UIImage(named: viewModel.isHeartbeatActive ? "hw_orange_0" : "hw_gray_0")
-        heartbeatLabel.textColor = viewModel.isHeartbeatActive ? AppColors.accent : AppColors.textSecondary
-        collectionView.reloadData()
+        connectCollectionView.reloadData()
+        hardwareCollectionView.reloadData()
     }
 
     func generalViewModel(_ viewModel: GeneralViewModel, didFailWithError error: String) {
-        // Silently handle in the background; data will refresh on next poll
+        // 靜默處理，下次輪詢時重試
     }
 }
 
-// MARK: - UICollectionView DataSource & Delegate
+// MARK: - UICollectionView 資料源和代理
 
 extension GeneralViewController: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return HardwareIcon.allCases.count
+        return collectionView.tag == 0 ? connectIcons.count : hardwareIcons.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(
-            withReuseIdentifier: HardwareStatusCell.reuseIdentifier,
-            for: indexPath
+            withReuseIdentifier: HardwareStatusCell.reuseIdentifier, for: indexPath
         ) as! HardwareStatusCell
-        let icon = HardwareIcon.allCases[indexPath.item]
+        let icon = collectionView.tag == 0 ? connectIcons[indexPath.item] : hardwareIcons[indexPath.item]
         let isActive = viewModel.activeHardwareModules.contains(icon.statusBit)
         cell.configure(icon: icon, isActive: isActive)
         return cell
@@ -170,15 +184,16 @@ extension GeneralViewController: UICollectionViewDataSource, UICollectionViewDel
         sizeForItemAt indexPath: IndexPath
     ) -> CGSize {
         let columns: CGFloat = 6
-        let spacing: CGFloat = 8
+        let spacing: CGFloat = 6
         let totalSpacing = spacing * (columns - 1)
         let width = (collectionView.bounds.width - totalSpacing) / columns
         return CGSize(width: width, height: 65)
     }
 }
 
-// MARK: - Section Header View
+// MARK: - 區段標題視圖
 
+/// 帶橙色豎條的區段標題（如「Connect state」「Hardware state」「BaseInfo」）
 final class SectionHeaderView: UIView {
 
     private let accentBar: UIView = {
@@ -209,20 +224,22 @@ final class SectionHeaderView: UIView {
     private func setupUI() {
         addSubview(accentBar)
         addSubview(titleLabel)
-        accentBar.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
 
-        NSLayoutConstraint.activate([
-            accentBar.leadingAnchor.constraint(equalTo: leadingAnchor),
-            accentBar.centerYAnchor.constraint(equalTo: centerYAnchor),
-            accentBar.widthAnchor.constraint(equalToConstant: 3),
-            accentBar.heightAnchor.constraint(equalToConstant: 18),
+        accentBar.snp.makeConstraints { make in
+            make.leading.equalToSuperview()
+            make.centerY.equalToSuperview()
+            make.width.equalTo(3)
+            make.height.equalTo(18)
+        }
 
-            titleLabel.leadingAnchor.constraint(equalTo: accentBar.trailingAnchor, constant: 8),
-            titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
-            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
+        titleLabel.snp.makeConstraints { make in
+            make.leading.equalTo(accentBar.snp.trailing).offset(8)
+            make.centerY.equalToSuperview()
+            make.trailing.lessThanOrEqualToSuperview()
+        }
 
-            heightAnchor.constraint(equalToConstant: 30),
-        ])
+        self.snp.makeConstraints { make in
+            make.height.equalTo(28)
+        }
     }
 }

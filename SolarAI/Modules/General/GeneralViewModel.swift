@@ -5,7 +5,7 @@ protocol GeneralViewModelDelegate: AnyObject {
     func generalViewModel(_ viewModel: GeneralViewModel, didFailWithError error: String)
 }
 
-/// ViewModel for the General tab — fetches connection state, hardware status, base info
+/// 總覽分頁的 ViewModel — 取得連線狀態、硬體狀態、基本資訊
 final class GeneralViewModel {
 
     weak var delegate: GeneralViewModelDelegate?
@@ -17,7 +17,7 @@ final class GeneralViewModel {
 
     private var refreshTimer: Timer?
 
-    // MARK: - Public
+    // MARK: - 公開方法
 
     func startPolling() {
         fetchData()
@@ -32,7 +32,7 @@ final class GeneralViewModel {
         refreshTimer = nil
     }
 
-    // MARK: - Private
+    // MARK: - 私有方法
 
     private func fetchData() {
         NetworkService.shared.fetchGeneral { [weak self] result in

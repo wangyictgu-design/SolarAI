@@ -1,40 +1,49 @@
 import UIKit
+import SnapKit
 
-/// Status View tab — shows the energy flow diagram with real-time data labels
+/// Status View 標籤頁 — 顯示能源流向圖及即時數據標籤
+///
+/// 標籤位置對照設計稿（image4.png）：
+/// - PV 數據：右上方（太陽能板區域上方）
+/// - Grid 數據：右側中間（電網塔旁邊）
+/// - Invert 數據：中間偏右（逆變器設備旁）
+/// - Load 數據：底部中間偏左（房子下方）
+/// - Batt 數據：底部右側（電池旁邊）
 final class StatusViewController: UIViewController {
 
-    // MARK: - Properties
+    // MARK: - 屬性
 
     private let viewModel = StatusViewModel()
 
-    // MARK: - UI Elements
+    // MARK: - UI 元件
 
+    /// 能源流向動畫圖
     private let energyFlowView = EnergyFlowView()
 
-    // PV data labels
+    // PV 數據標籤（太陽能板）
     private let pvChargerPLabel = DataLabel(prefix: "PV Charger P:")
     private let pvVoltLabel = DataLabel(prefix: "PV Volt:")
     private let pvChargerCurLabel = DataLabel(prefix: "PV Charger Cur:")
 
-    // Inverter data labels
+    // 逆變器數據標籤
     private let invertVoltLabel = DataLabel(prefix: "Invert Volt:")
     private let invertCurLabel = DataLabel(prefix: "Invert Cur:")
 
-    // Grid data labels
+    // 電網數據標籤
     private let gridPLabel = DataLabel(prefix: "Grid P:")
     private let gridCurLabel = DataLabel(prefix: "Grid Cur:")
     private let gridVoltLabel = DataLabel(prefix: "Grid Volt:")
 
-    // Load data labels
+    // 負載數據標籤
     private let sloadLabel = DataLabel(prefix: "SLoad:")
     private let ploadLabel = DataLabel(prefix: "PLoad:")
     private let totalLabel = DataLabel(prefix: "Total:")
 
-    // Battery data labels
+    // 電池數據標籤
     private let battVoltLabel = DataLabel(prefix: "Batt Volt:")
     private let battSOCLabel = DataLabel(prefix: "Batt SOC:")
 
-    // MARK: - Lifecycle
+    // MARK: - 生命週期
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -53,76 +62,72 @@ final class StatusViewController: UIViewController {
         viewModel.stopPolling()
     }
 
-    // MARK: - UI Setup
+    // MARK: - UI 佈局
 
     private func setupUI() {
         view.addSubview(energyFlowView)
-        energyFlowView.translatesAutoresizingMaskIntoConstraints = false
 
-        // Center the energy flow diagram
-        NSLayoutConstraint.activate([
-            energyFlowView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
-            energyFlowView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -8),
-            energyFlowView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            energyFlowView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.65),
-        ])
+        // 能源流向圖：偏左居中顯示
+        energyFlowView.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(8)
+            make.bottom.equalToSuperview().offset(-8)
+            make.leading.equalToSuperview().offset(8)
+            make.trailing.equalToSuperview().offset(-8)
+        }
 
-        // PV labels — top right area (near solar panel)
-        let pvStack = createVerticalStack([pvChargerPLabel, pvVoltLabel, pvChargerCurLabel])
+        // PV 數據 — 太陽上方，使用百分比定位適配不同機型
+        let pvStack = makeStack([pvChargerPLabel, pvVoltLabel, pvChargerCurLabel], alignment: .trailing)
         view.addSubview(pvStack)
-        pvStack.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            pvStack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
-            pvStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12),
-        ])
+        pvStack.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(2)
+            make.trailing.equalTo(view.snp.trailing).multipliedBy(0.78)
+        }
 
-        // Inverter labels — middle right
-        let inverterStack = createVerticalStack([invertVoltLabel, invertCurLabel])
-        view.addSubview(inverterStack)
-        inverterStack.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            inverterStack.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -20),
-            inverterStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12),
-        ])
-
-        // Grid labels — bottom right
-        let gridStack = createVerticalStack([gridPLabel, gridCurLabel, gridVoltLabel])
+        // Grid 數據 — 電網塔旁邊，PV 下方，使用百分比靠近圖標
+        let gridStack = makeStack([gridPLabel, gridCurLabel, gridVoltLabel], alignment: .trailing)
         view.addSubview(gridStack)
-        gridStack.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            gridStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -12),
-            gridStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12),
-        ])
+        gridStack.snp.makeConstraints { make in
+            make.top.equalTo(pvStack.snp.bottom).offset(8)
+            make.trailing.equalTo(view.snp.trailing).multipliedBy(0.88)
+        }
 
-        // Load labels — bottom center
-        let loadStack = createVerticalStack([sloadLabel, ploadLabel, totalLabel])
-        view.addSubview(loadStack)
-        loadStack.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            loadStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -12),
-            loadStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 12),
-        ])
+        // Invert 數據 — 逆變器旁邊，往左上調整避免與圖標重疊
+        let invertStack = makeStack([invertVoltLabel, invertCurLabel], alignment: .trailing)
+        view.addSubview(invertStack)
+        invertStack.snp.makeConstraints { make in
+            make.centerY.equalToSuperview().offset(-35)
+            make.trailing.equalTo(view.snp.trailing).multipliedBy(0.65)
+        }
 
-        // Battery labels — bottom left
-        let battStack = createVerticalStack([battVoltLabel, battSOCLabel])
+        // Batt 數據 — 電池旁邊，使用百分比定位往上貼近電池圖標
+        let battStack = makeStack([battVoltLabel, battSOCLabel], alignment: .leading)
         view.addSubview(battStack)
-        battStack.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            battStack.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 30),
-            battStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 12),
-        ])
+        battStack.snp.makeConstraints { make in
+            make.bottom.equalTo(view.snp.bottom).multipliedBy(0.86)
+            make.leading.equalTo(view.snp.trailing).multipliedBy(0.65)
+        }
+
+        // Load 數據 — 房子下方，底部中間偏左
+        let loadStack = makeStack([sloadLabel, ploadLabel, totalLabel], alignment: .leading)
+        view.addSubview(loadStack)
+        loadStack.snp.makeConstraints { make in
+            make.bottom.equalToSuperview().offset(-12)
+            make.centerX.equalToSuperview().offset(-50)
+        }
 
         setDefaultValues()
     }
 
-    private func createVerticalStack(_ views: [UIView]) -> UIStackView {
+    /// 建立垂直堆疊視圖
+    private func makeStack(_ views: [UIView], alignment: UIStackView.Alignment) -> UIStackView {
         let sv = UIStackView(arrangedSubviews: views)
         sv.axis = .vertical
         sv.spacing = 2
-        sv.alignment = .leading
+        sv.alignment = alignment
         return sv
     }
 
+    /// 設定預設數值
     private func setDefaultValues() {
         pvChargerPLabel.setValue("0 W")
         pvVoltLabel.setValue("0.0 V")
@@ -139,6 +144,7 @@ final class StatusViewController: UIViewController {
         battSOCLabel.setValue("0 %")
     }
 
+    /// 更新所有數據標籤
     private func updateDataLabels(_ status: DeviceStatusResponse) {
         pvChargerPLabel.setValue(status.pvChargerPwrDisplay)
         pvVoltLabel.setValue(status.pvVoltDisplay)
@@ -174,13 +180,13 @@ extension StatusViewController: StatusViewModelDelegate {
     }
 
     func statusViewModel(_ viewModel: StatusViewModel, didFailWithError error: String) {
-        // Silently handle; will retry on next polling interval
+        // 靜默處理，下次輪詢時重試
     }
 }
 
-// MARK: - Data Label View
+// MARK: - 數據標籤
 
-/// A small label showing "prefix value" in the status view
+/// 顯示「前綴: 數值」格式的小標籤（如「PV Volt: 0.0 V」）
 private final class DataLabel: UIView {
 
     private let label: UILabel = {
@@ -195,19 +201,15 @@ private final class DataLabel: UIView {
     init(prefix: String) {
         self.prefix = prefix
         super.init(frame: .zero)
-        setupUI()
+        addSubview(label)
+        label.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
     }
 
     required init?(coder: NSCoder) {
         self.prefix = ""
         super.init(coder: coder)
-        setupUI()
-    }
-
-    private func setupUI() {
-        addSubview(label)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.pinToSuperview()
     }
 
     func setValue(_ value: String) {

@@ -1,8 +1,10 @@
 import UIKit
 
+/// UIView 佈局快捷方法擴展
+/// 注意：大部分佈局已使用 SnapKit，此擴展保留部分通用方法供兼容使用
 extension UIView {
 
-    /// Pin all edges to superview with optional insets
+    /// 四邊對齊父視圖
     func pinToSuperview(insets: UIEdgeInsets = .zero) {
         guard let superview = superview else { return }
         translatesAutoresizingMaskIntoConstraints = false
@@ -14,19 +16,7 @@ extension UIView {
         ])
     }
 
-    /// Pin all edges to superview's safe area with optional insets
-    func pinToSafeArea(of viewController: UIViewController, insets: UIEdgeInsets = .zero) {
-        translatesAutoresizingMaskIntoConstraints = false
-        let guide = viewController.view.safeAreaLayoutGuide
-        NSLayoutConstraint.activate([
-            topAnchor.constraint(equalTo: guide.topAnchor, constant: insets.top),
-            leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: insets.left),
-            trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -insets.right),
-            bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -insets.bottom)
-        ])
-    }
-
-    /// Center in superview
+    /// 居中於父視圖
     func centerInSuperview() {
         guard let superview = superview else { return }
         translatesAutoresizingMaskIntoConstraints = false
@@ -36,18 +26,14 @@ extension UIView {
         ])
     }
 
-    /// Set fixed size constraints
+    /// 設定固定尺寸
     func setSize(width: CGFloat? = nil, height: CGFloat? = nil) {
         translatesAutoresizingMaskIntoConstraints = false
-        if let w = width {
-            widthAnchor.constraint(equalToConstant: w).isActive = true
-        }
-        if let h = height {
-            heightAnchor.constraint(equalToConstant: h).isActive = true
-        }
+        if let w = width { widthAnchor.constraint(equalToConstant: w).isActive = true }
+        if let h = height { heightAnchor.constraint(equalToConstant: h).isActive = true }
     }
 
-    /// Add rounded corner with optional border
+    /// 添加圓角和可選邊框
     func addRoundedCorners(radius: CGFloat, borderColor: UIColor? = nil, borderWidth: CGFloat = 0) {
         layer.cornerRadius = radius
         layer.masksToBounds = true
@@ -55,17 +41,5 @@ extension UIView {
             layer.borderColor = color.cgColor
             layer.borderWidth = borderWidth
         }
-    }
-
-    /// Add gradient background
-    @discardableResult
-    func addGradientLayer(colors: [UIColor], startPoint: CGPoint, endPoint: CGPoint) -> CAGradientLayer {
-        let gradient = CAGradientLayer()
-        gradient.colors = colors.map { $0.cgColor }
-        gradient.startPoint = startPoint
-        gradient.endPoint = endPoint
-        gradient.frame = bounds
-        layer.insertSublayer(gradient, at: 0)
-        return gradient
     }
 }

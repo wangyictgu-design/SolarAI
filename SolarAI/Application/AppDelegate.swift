@@ -11,7 +11,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 
-    // MARK: - UISceneSession Lifecycle
+    // MARK: - UISceneSession 生命週期
 
     func application(
         _ application: UIApplication,
@@ -28,7 +28,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return .landscape
     }
 
-    // MARK: - Private
+    // MARK: - 私有方法
 
     private func configureAppearance() {
         let navBarAppearance = UINavigationBarAppearance()

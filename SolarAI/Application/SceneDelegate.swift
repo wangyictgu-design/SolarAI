@@ -19,4 +19,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.makeKeyAndVisible()
         self.window = window
     }
+
+    func sceneWillEnterForeground(_ scene: UIScene) {
+        // 從 WiFi 設定返回時觸發網路檢查
+        NotificationCenter.default.post(name: .networkDidChange, object: nil)
+    }
 }

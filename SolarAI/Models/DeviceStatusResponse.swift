@@ -1,23 +1,23 @@
 import Foundation
 
-/// Response from GET /devStatus.do
+/// GET /devStatus.do 的回應
 struct DeviceStatusResponse: Codable {
     let status: Int
-    let pv1Volt: Int             // ÷10 → PV Volt (V)
-    let pv1ChargerCur: Int       // ÷10 → PV Charger Cur (A)
-    let pv1ChargerPwr: Int       // PV Charger P (W)
-    let battVolt: Int            // ÷10 → Batt Volt (V)
-    let gridVolt: Int            // ÷10 → Grid Volt (V)
-    let gridCur: Int             // ÷10 → Grid Cur (A)
-    let sload: Int               // SLoad (VA)
-    let pgrid: Int               // Grid P (W) — needs SINT conversion if > 0
-    let pload: Int               // PLoad (W)
-    let inverterVolt: Int        // ÷10 → Inverter Volt (V)
-    let inverterCur: Int         // ÷10 → Inverter Cur (A)
-    let bmsSocVal: Int           // Battery SOC (%)
-    let battType: Int            // 2 = lithium (show SOC), else hide
-    let pwrTotalHLoad: Int       // Total kWh high word
-    let pwrTotalLLoad: Int       // Total kWh low word
+    let pv1Volt: Int             // ÷10 → 太陽能電壓 (V)
+    let pv1ChargerCur: Int       // ÷10 → 太陽能充電電流 (A)
+    let pv1ChargerPwr: Int       // 太陽能充電功率 (W)
+    let battVolt: Int            // ÷10 → 電池電壓 (V)
+    let gridVolt: Int            // ÷10 → 電網電壓 (V)
+    let gridCur: Int             // ÷10 → 電網電流 (A)
+    let sload: Int               // 視在負載 (VA)
+    let pgrid: Int               // 電網功率 (W) — 若 > 0 需 SINT 轉換
+    let pload: Int               // 負載功率 (W)
+    let inverterVolt: Int        // ÷10 → 逆變器電壓 (V)
+    let inverterCur: Int         // ÷10 → 逆變器電流 (A)
+    let bmsSocVal: Int           // 電池 SOC (%)
+    let battType: Int            // 2 = 鋰電池（顯示 SOC），否則隱藏
+    let pwrTotalHLoad: Int       // 總 kWh 高位元組
+    let pwrTotalLLoad: Int       // 總 kWh 低位元組
 
     enum CodingKeys: String, CodingKey {
         case status
@@ -38,7 +38,7 @@ struct DeviceStatusResponse: Codable {
         case pwrTotalLLoad = "pwr_total_l_load"
     }
 
-    // MARK: - Formatted Display Values
+    // MARK: - 格式化顯示值
 
     var pvVoltDisplay: String { DataFormatter.formatVoltage(pv1Volt) }
     var pvChargerCurDisplay: String { DataFormatter.formatCurrent(pv1ChargerCur) }

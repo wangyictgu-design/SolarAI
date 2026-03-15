@@ -7,17 +7,17 @@ protocol BluetoothManagerDelegate: AnyObject {
     func bluetoothManager(_ manager: BluetoothManager, didFailWithError error: Error)
 }
 
-/// Represents a discovered BLE device (the solar inverter)
+/// 代表已發現的 BLE 裝置（太陽能逆變器）
 struct BluetoothDevice {
     let name: String
     let peripheral: CBPeripheral
     let rssi: Int
 
-    /// The device name is also used as the WiFi SSID
+    /// 裝置名稱同時作為 WiFi SSID 使用
     var wifiSSID: String { name }
 }
 
-/// Manages CoreBluetooth scanning to discover inverter devices
+/// 管理 CoreBluetooth 掃描以發現逆變器裝置
 final class BluetoothManager: NSObject {
 
     static let shared = BluetoothManager()
@@ -32,7 +32,7 @@ final class BluetoothManager: NSObject {
         super.init()
     }
 
-    // MARK: - Public
+    // MARK: - 公開方法
 
     func startScanning() {
         discoveredDevices.removeAll()
@@ -49,7 +49,7 @@ final class BluetoothManager: NSObject {
         isScanning = false
     }
 
-    // MARK: - Private
+    // MARK: - 私有方法
 
     private func beginScan() {
         guard centralManager?.state == .poweredOn else { return }
@@ -58,14 +58,14 @@ final class BluetoothManager: NSObject {
             CBCentralManagerScanOptionAllowDuplicatesKey: false
         ])
 
-        // Auto-stop scanning after 15 seconds
+        // 15 秒後自動停止掃描
         DispatchQueue.main.asyncAfter(deadline: .now() + 15) { [weak self] in
             self?.stopScanning()
         }
     }
 }
 
-// MARK: - CBCentralManagerDelegate
+// MARK: - CBCentralManagerDelegate 委派
 
 extension BluetoothManager: CBCentralManagerDelegate {
 
@@ -85,7 +85,7 @@ extension BluetoothManager: CBCentralManagerDelegate {
     ) {
         guard let name = peripheral.name, !name.isEmpty else { return }
 
-        // Avoid duplicates
+        // 避免重複
         if discoveredDevices.contains(where: { $0.peripheral.identifier == peripheral.identifier }) {
             return
         }

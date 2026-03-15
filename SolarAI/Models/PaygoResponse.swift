@@ -1,6 +1,6 @@
 import Foundation
 
-/// Request body for POST /password.do
+/// POST /password.do 的請求主體
 struct PaygoPasswordRequest: Codable {
     let pwd: String?
     let code: String?
@@ -16,7 +16,7 @@ struct PaygoPasswordRequest: Codable {
     }
 }
 
-/// Response from POST /password.do
+/// POST /password.do 的回應
 struct PaygoPasswordResponse: Codable {
     let status: Int
     let remainLockTime: Int
@@ -26,7 +26,7 @@ struct PaygoPasswordResponse: Codable {
         case remainLockTime = "remain_lock_time"
     }
 
-    /// 0 = OK, 1 = fail, 2 = blocking
+    /// 0 = 成功, 1 = 失敗, 2 = 鎖定中
     var resultType: PaygoResult {
         switch status {
         case 0: return .success
@@ -43,7 +43,7 @@ enum PaygoResult {
     case blocked(remainingSeconds: Int)
 }
 
-/// Response from GET /showInfo.do
+/// GET /showInfo.do 的回應
 struct PaygoInfoResponse: Codable {
     let status: Int
     let info: String

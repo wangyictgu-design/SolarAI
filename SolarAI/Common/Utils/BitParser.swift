@@ -1,15 +1,15 @@
 import Foundation
 
-/// Utility for parsing 16-bit flag values into individual bit states
+/// 用於將 16 位元旗標值解析為個別位元狀態的工具
 enum BitParser {
 
-    /// Check if a specific bit is set in a 16-bit value (bit 0 = rightmost)
+    /// 檢查 16 位元值中特定位元是否被設定（位元 0 = 最右側）
     static func isBitSet(_ value: Int, bit: Int) -> Bool {
         guard bit >= 0 && bit < 16 else { return false }
         return (value >> bit) & 1 == 1
     }
 
-    /// Get all set bit positions from a 16-bit value
+    /// 從 16 位元值取得所有已設定位元的位置
     static func getSetBits(_ value: Int) -> [Int] {
         var result: [Int] = []
         for bit in 0..<16 {
@@ -20,14 +20,14 @@ enum BitParser {
         return result
     }
 
-    // MARK: - Arrow Flag → Energy Flow Type
+    // MARK: - 箭頭旗標 → 能量流向類型
 
-    /// Arrow flag bit definitions:
-    ///   bit 1: PV input active
-    ///   bit 2: Grid/AC input active
-    ///   bit 3: Battery discharging
-    ///   bit 5: Battery charging
-    ///   bit 7: Load output active
+    /// 箭頭旗標位元定義：
+    ///   bit 1: 太陽能輸入啟用
+    ///   bit 2: 電網/交流輸入啟用
+    ///   bit 3: 電池放電中
+    ///   bit 5: 電池充電中
+    ///   bit 7: 負載輸出啟用
     static func parseArrowFlag(_ flag: Int) -> EnergyFlowType {
         let pvActive   = isBitSet(flag, bit: 1)
         let gridActive = isBitSet(flag, bit: 2)
@@ -66,9 +66,9 @@ enum BitParser {
         return .noConnect
     }
 
-    // MARK: - Hardware Status Flag
+    // MARK: - 硬體狀態旗標
 
-    /// Parse the status value to determine which hardware modules are active
+    /// 解析狀態值以判斷哪些硬體模組為啟用狀態
     static func parseHardwareStatus(_ value: Int) -> Set<Int> {
         var activeModules = Set<Int>()
         for bit in 0..<16 {
@@ -79,9 +79,9 @@ enum BitParser {
         return activeModules
     }
 
-    // MARK: - SINT Conversion (for pgrid)
+    // MARK: - SINT 轉換（用於 pgrid）
 
-    /// Convert unsigned 16-bit value to signed using two's complement
+    /// 使用二補數將無符號 16 位元值轉換為有符號
     static func toSigned16(_ value: Int) -> Int {
         if value <= 0 {
             return value

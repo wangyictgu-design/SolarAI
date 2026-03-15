@@ -1,18 +1,19 @@
 import UIKit
+import SnapKit
 
-/// Main container with side tab bar (right) and content area (left)
-/// Hosts General, StatusView, FaultyAlert, and PAYGO child view controllers
+/// 主容器視圖控制器：頂部水平標籤欄 + 下方內容區
+/// 管理子視圖控制器：General、StatusView、FaultyAlert、Paygo
 final class MainContainerViewController: UIViewController {
 
-    // MARK: - Properties
+    // MARK: - 屬性
 
     private let deviceName: String
-    private var sideTabBar: SideTabBarView!
+    private var topTabBar: TopTabBarView!
     private let contentContainer = UIView()
     private var childControllers: [UIViewController] = []
     private var currentChildIndex: Int = -1
 
-    // MARK: - Init
+    // MARK: - 初始化
 
     init(deviceName: String) {
         self.deviceName = deviceName
@@ -23,7 +24,7 @@ final class MainContainerViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Lifecycle
+    // MARK: - 生命週期
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,8 +37,9 @@ final class MainContainerViewController: UIViewController {
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask { .landscape }
     override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation { .landscapeLeft }
 
-    // MARK: - Setup
+    // MARK: - 設定
 
+    /// 建立四個子視圖控制器
     private func setupChildControllers() {
         let generalVC = GeneralViewController(deviceName: deviceName)
         let statusVC = StatusViewController()
@@ -46,40 +48,36 @@ final class MainContainerViewController: UIViewController {
         childControllers = [generalVC, statusVC, faultyVC, paygoVC]
     }
 
+    /// 設定頂部標籤欄與內容區佈局
     private func setupUI() {
         view.backgroundColor = AppColors.background
 
-        sideTabBar = SideTabBarView(deviceName: deviceName)
-        sideTabBar.delegate = self
+        topTabBar = TopTabBarView(deviceName: deviceName)
+        topTabBar.delegate = self
 
+        view.addSubview(topTabBar)
         view.addSubview(contentContainer)
-        view.addSubview(sideTabBar)
 
-        contentContainer.translatesAutoresizingMaskIntoConstraints = false
-        sideTabBar.translatesAutoresizingMaskIntoConstraints = false
+        // 頂部標籤欄：高度 50，貼齊頂部
+        topTabBar.snp.makeConstraints { make in
+            make.top.leading.trailing.equalToSuperview()
+            make.height.equalTo(50)
+        }
 
-        let tabWidth: CGFloat = 100
-        NSLayoutConstraint.activate([
-            // Side tab bar — right side
-            sideTabBar.topAnchor.constraint(equalTo: view.topAnchor),
-            sideTabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            sideTabBar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            sideTabBar.widthAnchor.constraint(equalToConstant: tabWidth),
-
-            // Content area — fills the rest
-            contentContainer.topAnchor.constraint(equalTo: view.topAnchor),
-            contentContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            contentContainer.trailingAnchor.constraint(equalTo: sideTabBar.leadingAnchor),
-            contentContainer.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        ])
+        // 內容區：緊貼標籤欄下方，填滿剩餘空間
+        contentContainer.snp.makeConstraints { make in
+            make.top.equalTo(topTabBar.snp.bottom)
+            make.leading.trailing.bottom.equalToSuperview()
+        }
     }
 
-    // MARK: - Child Management
+    // MARK: - 子視圖控制器管理
 
+    /// 切換顯示指定索引的子視圖控制器
     private func showChild(at index: Int) {
         guard index >= 0, index < childControllers.count, index != currentChildIndex else { return }
 
-        // Remove current child
+        // 移除當前子控制器
         if currentChildIndex >= 0 && currentChildIndex < childControllers.count {
             let current = childControllers[currentChildIndex]
             current.willMove(toParent: nil)
@@ -87,18 +85,19 @@ final class MainContainerViewController: UIViewController {
             current.removeFromParent()
         }
 
-        // Add new child
+        // 加入並顯示新子控制器
         let child = childControllers[index]
         addChild(child)
         contentContainer.addSubview(child.view)
-        child.view.translatesAutoresizingMaskIntoConstraints = false
-        child.view.pinToSuperview()
+        child.view.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
         child.didMove(toParent: self)
 
         currentChildIndex = index
     }
 
-    // MARK: - Exit Dialog
+    // MARK: - 退出確認對話框
 
     private func showExitDialog() {
         let exitView = ExitConfirmView()
@@ -107,15 +106,15 @@ final class MainContainerViewController: UIViewController {
     }
 }
 
-// MARK: - SideTabBarViewDelegate
+// MARK: - TopTabBarViewDelegate
 
-extension MainContainerViewController: SideTabBarViewDelegate {
+extension MainContainerViewController: TopTabBarViewDelegate {
 
-    func sideTabBarView(_ view: SideTabBarView, didSelectTabAt index: Int) {
+    func topTabBarView(_ view: TopTabBarView, didSelectTabAt index: Int) {
         showChild(at: index)
     }
 
-    func sideTabBarViewDidTapConnected(_ view: SideTabBarView) {
+    func topTabBarViewDidTapConnected(_ view: TopTabBarView) {
         showExitDialog()
     }
 }
@@ -124,13 +123,12 @@ extension MainContainerViewController: SideTabBarViewDelegate {
 
 extension MainContainerViewController: ExitConfirmViewDelegate {
 
-    func exitConfirmViewDidCancel(_ view: ExitConfirmView) {
+    func didCancel(_ view: ExitConfirmView) {
         view.dismiss()
     }
 
-    func exitConfirmViewDidConfirm(_ view: ExitConfirmView) {
+    func didConfirm(_ view: ExitConfirmView) {
         view.dismiss()
-        WiFiManager.shared.disconnect(ssid: deviceName)
         navigationController?.popToRootViewController(animated: true)
     }
 }

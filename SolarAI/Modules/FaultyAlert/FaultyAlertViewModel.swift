@@ -5,7 +5,7 @@ protocol FaultyAlertViewModelDelegate: AnyObject {
     func faultyAlertViewModel(_ viewModel: FaultyAlertViewModel, didFailWithError error: String)
 }
 
-/// ViewModel for the Faulty Alert tab — fetches and parses error/warning bit fields
+/// 故障警報分頁的 ViewModel — 取得並解析錯誤/警告位元欄位
 final class FaultyAlertViewModel {
 
     weak var delegate: FaultyAlertViewModelDelegate?
@@ -15,7 +15,7 @@ final class FaultyAlertViewModel {
 
     private var refreshTimer: Timer?
 
-    // MARK: - Public
+    // MARK: - 公開方法
 
     func startPolling() {
         fetchData()
@@ -30,7 +30,7 @@ final class FaultyAlertViewModel {
         refreshTimer = nil
     }
 
-    // MARK: - Private
+    // MARK: - 私有方法
 
     private func fetchData() {
         isLoading = true

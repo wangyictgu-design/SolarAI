@@ -1,9 +1,11 @@
 import UIKit
+import SnapKit
 
-/// Displays the animated energy flow diagram (isometric house illustration)
-/// Cycles through 6 animation frames based on the current flow type
+/// 顯示動態能源流向圖（等角房屋示意圖）
+/// 根據當前流向類型循環播放動畫幀
 final class EnergyFlowView: UIView {
 
+    /// 圖片視圖，填滿整個視圖，scaleAspectFit
     private let imageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
@@ -11,7 +13,6 @@ final class EnergyFlowView: UIView {
     }()
 
     private var currentFlowType: EnergyFlowType = .noConnect
-    private var animationTimer: Timer?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -25,38 +26,38 @@ final class EnergyFlowView: UIView {
         showNoConnect()
     }
 
-    deinit {
-        stopAnimation()
-    }
-
     private func setupUI() {
         addSubview(imageView)
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.pinToSuperview()
+        imageView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
     }
 
-    // MARK: - Public
+    // MARK: - 公開方法
 
+    /// 更新能源流向類型
+    /// - Parameter type: 能源流向類型（含 frameCount、frameImageName(at:)）
     func updateFlowType(_ type: EnergyFlowType) {
         guard type != currentFlowType else { return }
         currentFlowType = type
 
-        stopAnimation()
-
         if type == .noConnect {
+            // 無連線：顯示靜態圖片
             showNoConnect()
         } else {
+            // 其他類型：建立 6 幀動畫，總時長 = 每幀時長 × 幀數
             startAnimation(for: type)
         }
     }
 
-    // MARK: - Animation
+    // MARK: - 動畫
 
+    /// 顯示無連線靜態圖
     private func showNoConnect() {
-        imageView.stopAnimating()
         imageView.image = UIImage(named: "no_connect")
     }
 
+    /// 啟動動畫
     private func startAnimation(for type: EnergyFlowType) {
         var frames: [UIImage] = []
         for i in 0..<type.frameCount {
@@ -71,14 +72,8 @@ final class EnergyFlowView: UIView {
             return
         }
 
-        imageView.animationImages = frames
-        imageView.animationDuration = Double(frames.count) * AnimationConfig.flowFrameDuration
-        imageView.animationRepeatCount = AnimationConfig.flowAnimationRepeat
-        imageView.startAnimating()
-    }
-
-    private func stopAnimation() {
-        imageView.stopAnimating()
-        imageView.animationImages = nil
+        // 使用 UIImage.animatedImage，總時長 = AnimationConfig.flowFrameDuration × 幀數
+        let duration = AnimationConfig.flowFrameDuration * Double(type.frameCount)
+        imageView.image = UIImage.animatedImage(with: frames, duration: duration)
     }
 }

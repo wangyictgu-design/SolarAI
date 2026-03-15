@@ -7,7 +7,7 @@ protocol PaygoViewModelDelegate: AnyObject {
     func paygoViewModel(_ viewModel: PaygoViewModel, didGetBlocked remainingSeconds: Int)
 }
 
-/// ViewModel for the PAYGO tab — handles code submission and device status info
+/// PAYGO 分頁的 ViewModel — 處理代碼提交與裝置狀態資訊
 final class PaygoViewModel {
 
     weak var delegate: PaygoViewModelDelegate?
@@ -18,7 +18,7 @@ final class PaygoViewModel {
 
     private var infoTimer: Timer?
 
-    // MARK: - Code Input
+    // MARK: - 代碼輸入
 
     func appendDigit(_ digit: Int) {
         guard currentCode.count < 20 else { return }
@@ -38,7 +38,7 @@ final class PaygoViewModel {
         useCompatibility = enabled
     }
 
-    // MARK: - Submit
+    // MARK: - 提交
 
     func submitCode() {
         guard !currentCode.isEmpty else {
@@ -67,7 +67,7 @@ final class PaygoViewModel {
         }
     }
 
-    // MARK: - Info Polling
+    // MARK: - 資訊輪詢
 
     func startInfoPolling() {
         fetchInfo()

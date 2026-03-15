@@ -1,8 +1,12 @@
 import UIKit
+import SnapKit
 
-/// Full-screen translucent loading overlay with spinner and message
+/// 全螢幕半透明載入遮罩，包含旋轉指示器與訊息文字
 final class LoadingView: UIView {
 
+    // MARK: - 子視圖
+
+    /// 白色圓角容器
     private let containerView: UIView = {
         let v = UIView()
         v.backgroundColor = UIColor.white.withAlphaComponent(0.95)
@@ -13,6 +17,7 @@ final class LoadingView: UIView {
         return v
     }()
 
+    /// 綠色旋轉指示器（大尺寸）
     private let spinner: UIActivityIndicatorView = {
         let s = UIActivityIndicatorView(style: .large)
         s.color = AppColors.confirm
@@ -20,6 +25,7 @@ final class LoadingView: UIView {
         return s
     }()
 
+    /// 訊息標籤，顯示於旋轉指示器下方
     private let messageLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 15, weight: .medium)
@@ -27,6 +33,8 @@ final class LoadingView: UIView {
         label.textAlignment = .center
         return label
     }()
+
+    // MARK: - 初始化
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -38,6 +46,8 @@ final class LoadingView: UIView {
         setupUI()
     }
 
+    // MARK: - 佈局
+
     private func setupUI() {
         backgroundColor = UIColor.black.withAlphaComponent(0.4)
 
@@ -45,25 +55,26 @@ final class LoadingView: UIView {
         containerView.addSubview(spinner)
         containerView.addSubview(messageLabel)
 
-        [containerView, spinner, messageLabel].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
+        containerView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.size.equalTo(CGSize(width: 200, height: 140))
         }
 
-        NSLayoutConstraint.activate([
-            containerView.centerXAnchor.constraint(equalTo: centerXAnchor),
-            containerView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            containerView.widthAnchor.constraint(equalToConstant: 200),
-            containerView.heightAnchor.constraint(equalToConstant: 140),
+        spinner.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalToSuperview().offset(30)
+        }
 
-            spinner.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-            spinner.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 30),
-
-            messageLabel.topAnchor.constraint(equalTo: spinner.bottomAnchor, constant: 16),
-            messageLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
-            messageLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
-        ])
+        messageLabel.snp.makeConstraints { make in
+            make.top.equalTo(spinner.snp.bottom).offset(16)
+            make.leading.equalToSuperview().offset(12)
+            make.trailing.equalToSuperview().offset(-12)
+        }
     }
 
+    // MARK: - 公開方法
+
+    /// 顯示載入視圖並設定訊息
     func show(message: String) {
         messageLabel.text = message
         spinner.startAnimating()
@@ -72,10 +83,12 @@ final class LoadingView: UIView {
         UIView.animate(withDuration: 0.25) { self.alpha = 1 }
     }
 
+    /// 更新訊息文字
     func updateMessage(_ message: String) {
         messageLabel.text = message
     }
 
+    /// 隱藏載入視圖（帶淡出動畫）
     func hide() {
         UIView.animate(withDuration: 0.2, animations: {
             self.alpha = 0

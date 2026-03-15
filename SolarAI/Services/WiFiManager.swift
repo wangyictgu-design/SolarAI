@@ -1,107 +1,132 @@
 import Foundation
 import UIKit
+import SystemConfiguration
+import Alamofire
 
-/// Manages WiFi connection to the inverter's hotspot.
-/// Since NEHotspotConfiguration requires a paid developer account,
-/// this implementation guides the user to manually connect via iOS Settings,
-/// then verifies connectivity by pinging the device API.
+/// 網路變化通知（WiFi 切換等）
+extension Notification.Name {
+    static let networkDidChange = Notification.Name("SolarAI.networkDidChange")
+    static let deviceReachabilityResult = Notification.Name("SolarAI.deviceReachabilityResult")
+}
+
+/// WiFi 連接管理器
+/// iOS 無法掃描 WiFi 列表，因此本類的職責是：
+/// 1. 打開系統 WiFi 設定讓用戶手動連接
+/// 2. 透過 SCNetworkReachability 監聽網路變化
+/// 3. 透過 Ping 設備 API 驗證是否連接到正確的 WiFi
 final class WiFiManager {
 
     static let shared = WiFiManager()
 
+    private var reachability: SCNetworkReachability?
+    private var isMonitoring = false
+
     private init() {}
 
-    // MARK: - Connect (Manual Flow)
+    // MARK: - 打開系統 WiFi 設定
 
-    /// Guide user to connect WiFi manually, then verify the connection by pinging the device.
-    /// - Parameters:
-    ///   - ssid: The WiFi SSID to display to the user
-    ///   - password: The WiFi password to display to the user
-    ///   - from: The presenting view controller (for showing the alert)
-    ///   - completion: Called with success/failure on the main thread
-    func connect(
-        ssid: String,
-        password: String,
-        from viewController: UIViewController,
-        completion: @escaping (Result<Void, WiFiError>) -> Void
-    ) {
-        let message = "Please connect to the WiFi manually:\n\n"
-            + "1. Open iPhone Settings → WiFi\n"
-            + "2. Find and connect to: \(ssid)\n"
-            + "3. Password: \(password)\n"
-            + "4. Come back to this app and tap \"Done\""
+    func openWiFiSettings() {
+        if let url = URL(string: "App-Prefs:root=WIFI"),
+           UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        } else if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
+        }
+    }
 
-        let alert = UIAlertController(title: "Connect to Device WiFi", message: message, preferredStyle: .alert)
+    // MARK: - 網路變化監聽
 
-        alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
-            if let url = URL(string: "App-Prefs:root=WIFI") {
-                UIApplication.shared.open(url)
-            } else if let url = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(url)
-            }
-        })
+    func startMonitoringNetworkChanges() {
+        guard !isMonitoring else { return }
 
-        alert.addAction(UIAlertAction(title: "Done", style: .default) { _ in
-            self.verifyDeviceReachable { reachable in
-                if reachable {
-                    completion(.success(()))
-                } else {
-                    completion(.failure(.verificationFailed))
+        let host = "192.168.4.1"
+        reachability = SCNetworkReachabilityCreateWithName(nil, host)
+
+        var context = SCNetworkReachabilityContext(
+            version: 0, info: nil, retain: nil, release: nil, copyDescription: nil
+        )
+
+        if let reachability = reachability {
+            SCNetworkReachabilitySetCallback(reachability, { (_, _, _) in
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .networkDidChange, object: nil)
                 }
-            }
-        })
+            }, &context)
 
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
-            completion(.failure(.userDenied))
-        })
-
-        viewController.present(alert, animated: true)
-    }
-
-    // MARK: - Disconnect
-
-    func disconnect(ssid: String) {
-        // Manual disconnect — user handles this in Settings
-    }
-
-    // MARK: - Verify Connection
-
-    /// Ping the device's general.do endpoint to verify we're on the correct network
-    func verifyDeviceReachable(completion: @escaping (Bool) -> Void) {
-        guard let url = URL(string: "\(AppConfig.baseURL)\(APIEndpoint.general)") else {
-            completion(false)
-            return
+            SCNetworkReachabilityScheduleWithRunLoop(
+                reachability, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue
+            )
         }
 
-        var request = URLRequest(url: url)
-        request.timeoutInterval = 5
-
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            DispatchQueue.main.async {
-                if let httpResponse = response as? HTTPURLResponse,
-                   (200...299).contains(httpResponse.statusCode),
-                   data != nil {
-                    completion(true)
-                } else {
-                    completion(false)
+        // Darwin 系統級網路變化通知（與 c019-app 相同做法）
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            Unmanaged.passUnretained(self).toOpaque(),
+            { (_, _, _, _, _) in
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .networkDidChange, object: nil)
                 }
+            },
+            "com.apple.system.config.network_change" as CFString,
+            nil,
+            .deliverImmediately
+        )
+
+        isMonitoring = true
+    }
+
+    func stopMonitoringNetworkChanges() {
+        if let reachability = reachability {
+            SCNetworkReachabilityUnscheduleFromRunLoop(
+                reachability, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue
+            )
+        }
+        reachability = nil
+        isMonitoring = false
+    }
+
+    // MARK: - 判斷是否在 WiFi 網路
+
+    var isOnWiFi: Bool {
+        let manager = NetworkReachabilityManager()
+        return manager?.isReachableOnEthernetOrWiFi ?? false
+    }
+
+    // MARK: - Ping 設備驗證連接
+
+    /// 向逆變器 API 發送請求，驗證是否連到正確的 WiFi
+    func pingDevice(completion: ((Bool) -> Void)? = nil) {
+        let url = "\(AppConfig.baseURL)\(APIEndpoint.general)"
+
+        AF.request(url, method: .get, requestModifier: { $0.timeoutInterval = 4 })
+            .validate(statusCode: 200..<300)
+            .responseData { response in
+                let success = response.data != nil && response.error == nil
+                NotificationCenter.default.post(
+                    name: .deviceReachabilityResult,
+                    object: nil,
+                    userInfo: ["reachable": success]
+                )
+                completion?(success)
             }
-        }.resume()
     }
 }
 
-// MARK: - WiFi Error
+// MARK: - WiFi 錯誤類型
 
 enum WiFiError: Error, LocalizedError {
-    case connectionFailed(String)
-    case userDenied
-    case verificationFailed
+    case notOnWiFi
+    case deviceUnreachable
+    case cancelled
 
     var errorDescription: String? {
         switch self {
-        case .connectionFailed(let message): return "WiFi connection failed: \(message)"
-        case .userDenied: return "Connection cancelled"
-        case .verificationFailed: return "Cannot reach the inverter device. Please make sure you are connected to the correct WiFi."
+        case .notOnWiFi:
+            return "請先連接到 WiFi 網路"
+        case .deviceUnreachable:
+            return "無法連接到逆變器，請確認已連接到 SSE WiFi"
+        case .cancelled:
+            return "連接已取消"
         }
     }
 }

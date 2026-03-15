@@ -6,7 +6,7 @@ protocol StatusViewModelDelegate: AnyObject {
     func statusViewModel(_ viewModel: StatusViewModel, didFailWithError error: String)
 }
 
-/// ViewModel for the Status View tab — polls device status and general endpoints
+/// 狀態檢視分頁的 ViewModel — 輪詢裝置狀態與 general 端點
 final class StatusViewModel {
 
     weak var delegate: StatusViewModelDelegate?
@@ -16,7 +16,7 @@ final class StatusViewModel {
 
     private var refreshTimer: Timer?
 
-    // MARK: - Public
+    // MARK: - 公開方法
 
     func startPolling() {
         fetchData()
@@ -31,12 +31,12 @@ final class StatusViewModel {
         refreshTimer = nil
     }
 
-    // MARK: - Private
+    // MARK: - 私有方法
 
     private func fetchData() {
         let group = DispatchGroup()
 
-        // Fetch arrow_flag for flow animation
+        // 取得 arrow_flag 以顯示流向動畫
         group.enter()
         NetworkService.shared.fetchGeneral { [weak self] result in
             if case .success(let response) = result {
@@ -51,7 +51,7 @@ final class StatusViewModel {
             group.leave()
         }
 
-        // Fetch device status for data labels
+        // 取得裝置狀態以顯示資料標籤
         group.enter()
         NetworkService.shared.fetchDeviceStatus { [weak self] result in
             switch result {
@@ -72,6 +72,6 @@ final class StatusViewModel {
     }
 }
 
-// MARK: - Equatable for EnergyFlowType
+// MARK: - EnergyFlowType 的 Equatable 實作
 
 extension EnergyFlowType: Equatable {}

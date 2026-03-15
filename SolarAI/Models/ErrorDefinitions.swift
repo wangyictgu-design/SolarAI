@@ -7,10 +7,10 @@ struct FaultDefinition {
     let isWarning: Bool
 }
 
-/// All error/warning bit definitions from the alarm description spreadsheet
+/// 來自警報說明表的錯誤/警告位元定義
 enum ErrorDefinitions {
 
-    // MARK: - Error Message 1 (控制码 25261)
+    // MARK: - 錯誤訊息 1（控制碼 25261）
 
     static let error1: [Int: FaultDefinition] = [
         0: FaultDefinition(
@@ -111,7 +111,7 @@ enum ErrorDefinitions {
         )
     ]
 
-    // MARK: - Error Message 2 (控制码 25262)
+    // MARK: - 錯誤訊息 2（控制碼 25262）
 
     static let error2: [Int: FaultDefinition] = [
         0: FaultDefinition(
@@ -206,7 +206,7 @@ enum ErrorDefinitions {
         )
     ]
 
-    // MARK: - Error Message 3 (控制码 25263) — Parallel related
+    // MARK: - 錯誤訊息 3（控制碼 25263）— 並聯相關
 
     static let error3: [Int: FaultDefinition] = [
         0: FaultDefinition(
@@ -283,7 +283,7 @@ enum ErrorDefinitions {
         )
     ]
 
-    // MARK: - Warning Message 1 (控制码 25265)
+    // MARK: - 警告訊息 1（控制碼 25265）
 
     static let warn1: [Int: FaultDefinition] = [
         0: FaultDefinition(
@@ -354,11 +354,11 @@ enum ErrorDefinitions {
         )
     ]
 
-    // MARK: - Warning Message 2 (placeholder for expansion)
+    // MARK: - 警告訊息 2（預留擴充）
 
     static let warn2: [Int: FaultDefinition] = [:]
 
-    // MARK: - Charger Error (控制码 15213/16213)
+    // MARK: - 充電器錯誤（控制碼 15213/16213）
 
     static let chargerError: [Int: FaultDefinition] = [
         0: FaultDefinition(
@@ -459,7 +459,7 @@ enum ErrorDefinitions {
         )
     ]
 
-    // MARK: - Charger Warning (控制码 15214/16214)
+    // MARK: - 充電器警告（控制碼 15214/16214）
 
     static let chargerWarn: [Int: FaultDefinition] = [
         0: FaultDefinition(
