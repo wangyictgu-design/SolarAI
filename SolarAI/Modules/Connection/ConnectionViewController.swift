@@ -439,7 +439,9 @@ final class ConnectionViewController: UIViewController {
         togglePasswordButton.setImage(UIImage(systemName: name, withConfiguration: config), for: .normal)
     }
 
-    @objc private func returnTapped() {}
+    @objc private func returnTapped() {
+        UIApplication.shared.perform(#selector(NSXPCConnection.suspend))
+    }
 
     @objc private func testEntryTapped() {
         navigateToMain(deviceName: "TestDevice")
