@@ -82,6 +82,10 @@ final class PaygoViewModel {
         infoTimer = nil
     }
 
+    func refreshInfo() {
+        fetchInfo()
+    }
+
     private func fetchInfo() {
         NetworkService.shared.fetchPaygoInfo { [weak self] result in
             guard let self = self else { return }

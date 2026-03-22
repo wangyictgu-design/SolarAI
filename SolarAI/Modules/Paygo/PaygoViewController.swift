@@ -31,7 +31,7 @@ final class PaygoViewController: UIViewController {
         return v
     }()
 
-    /// 代码显示区
+    /// 代码显示区（同时用于显示用户输入和设备 info 文本）
     private let displayLabel: UILabel = {
         let label = UILabel()
         label.backgroundColor = UIColor(hex: "#6B7B8B").withAlphaComponent(0.5)
@@ -40,19 +40,12 @@ final class PaygoViewController: UIViewController {
         label.textAlignment = .center
         label.layer.cornerRadius = 6
         label.clipsToBounds = true
-        label.text = ""
+        label.text = "Input code"
         return label
     }()
 
-    /// 输入框内的 placeholder（来自 /showInfo.do 的 info 字段）
-    private let placeholderLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Input code"
-        label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        label.textColor = UIColor(white: 0.75, alpha: 1.0)
-        label.textAlignment = .center
-        return label
-    }()
+    /// 缓存最新的设备 info 文本
+    private var latestDeviceInfo: String = "Input code"
 
     /// 结果提示标签（成功/失败）
     private let resultLabel: UILabel = {
@@ -130,7 +123,6 @@ final class PaygoViewController: UIViewController {
         view.addSubview(resultLabel)
         view.addSubview(compatibilityStack)
         keypadContainer.addSubview(displayLabel)
-        keypadContainer.addSubview(placeholderLabel)
 
         compatibilityStack.addArrangedSubview(compatibilityCheckbox)
         compatibilityStack.addArrangedSubview(compatibilityLabel)
@@ -159,11 +151,6 @@ final class PaygoViewController: UIViewController {
             make.top.equalToSuperview().offset(12)
             make.leading.trailing.equalToSuperview().inset(12)
             make.height.equalTo(40)
-        }
-
-        // placeholder 覆盖在 displayLabel 上（居中对齐）
-        placeholderLabel.snp.makeConstraints { make in
-            make.edges.equalTo(displayLabel)
         }
 
         // 结果标签
@@ -255,8 +242,15 @@ final class PaygoViewController: UIViewController {
     }
 
     private func updateDisplay() {
-        displayLabel.text = viewModel.currentCode
-        placeholderLabel.isHidden = !viewModel.currentCode.isEmpty
+        if viewModel.currentCode.isEmpty {
+            displayLabel.text = latestDeviceInfo
+            displayLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+            displayLabel.textColor = UIColor(white: 0.85, alpha: 1.0)
+        } else {
+            displayLabel.text = viewModel.currentCode
+            displayLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 20, weight: .medium)
+            displayLabel.textColor = AppColors.textPrimary
+        }
     }
 
     @objc private func toggleCompatibility() {
@@ -288,17 +282,27 @@ extension PaygoViewController: PaygoViewModelDelegate {
         showResult(text: "Code accepted!", color: AppColors.confirm)
         viewModel.clearCode()
         updateDisplay()
+        viewModel.refreshInfo()
     }
 
     func paygoViewModel(_ viewModel: PaygoViewModel, didSubmitFailure message: String) {
         showResult(text: message, color: AppColors.error)
+        viewModel.clearCode()
+        updateDisplay()
+        viewModel.refreshInfo()
     }
 
     func paygoViewModel(_ viewModel: PaygoViewModel, didUpdateInfo info: String) {
-        placeholderLabel.text = info
+        latestDeviceInfo = info
+        if viewModel.currentCode.isEmpty {
+            updateDisplay()
+        }
     }
 
     func paygoViewModel(_ viewModel: PaygoViewModel, didGetBlocked remainingSeconds: Int) {
         showResult(text: "Blocked. Wait \(remainingSeconds)s", color: AppColors.error)
+        viewModel.clearCode()
+        updateDisplay()
+        viewModel.refreshInfo()
     }
 }

@@ -44,6 +44,7 @@
 
 /* Begin PBXFileReference section */
 		00C559301B29DDC38BFEB156 /* ErrorDefinitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorDefinitions.swift; sourceTree = "<group>"; };
+		05C1483C2F7007D70079FA5F /* File.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = File.txt; sourceTree = "<group>"; };
 		081FEF8268FB4968F11F48C2 /* PaygoResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaygoResponse.swift; sourceTree = "<group>"; };
 		0DB489F81EE53E32EA4A4D73 /* StatusViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusViewController.swift; sourceTree = "<group>"; };
 		0E269C502B39BEB121148592 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -200,13 +201,13 @@
 				960504B670AB2C7F90A8A76D /* Pods-SolarAI.debug.xcconfig */,
 				A5496665124CE779EAC88CB2 /* Pods-SolarAI.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
 		872A298EEE5C1AEB1E820870 = {
 			isa = PBXGroup;
 			children = (
+				05C1483C2F7007D70079FA5F /* File.txt */,
 				2058A0F9C2E92C18D5FF5284 /* SolarAI */,
 				4D08E3D157F0699093ACC217 /* Products */,
 				7A3AD5B10E6BB08433A053C7 /* Pods */,
@@ -397,9 +398,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SolarAI/Pods-SolarAI-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SolarAI/Pods-SolarAI-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
