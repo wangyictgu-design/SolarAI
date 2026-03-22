@@ -40,24 +40,27 @@ enum AppColors {
 
 // MARK: - 硬件图示名称
 
-/// 将硬件功能名称对应至图示资源名称（灰/橘色配对）
+/// 硬件图标枚举 — 声明顺序决定 UI 显示顺序（与安卓端一致）
+/// rawValue 仅用于 activeHardwareModules 集合的标识，不再直接对应图片文件名
 enum HardwareIcon: Int, CaseIterable {
+    // Connect state（第一行 5 个）
     case heartbeat = 0
-    case bluetooth
-    case wifi
-    case fourG
-    case gps
-    case pvInput
-    case battery
-    case grid
-    case load
-    case generator
-    case bts
-    case rs485
-    case usb
-    case bms
-    case can
-    case ct
+    case bluetooth = 1
+    case wifi = 2
+    case fourG = 3
+    case gps = 4
+    // Hardware state（第二、三行 11 个）— 顺序与安卓一致
+    case pvInput = 5
+    case load = 6
+    case battery = 7
+    case grid = 8
+    case generator = 9
+    case ct = 10
+    case rs485 = 11
+    case usb = 12
+    case bts = 13
+    case can = 14
+    case bms = 15
 
     var title: String {
         switch self {
@@ -67,16 +70,38 @@ enum HardwareIcon: Int, CaseIterable {
         case .fourG:      return "4G"
         case .gps:        return "GPS"
         case .pvInput:    return "PV Input"
+        case .load:       return "Load"
         case .battery:    return "Battery"
         case .grid:       return "Grid"
-        case .load:       return "Load"
         case .generator:  return "Generator"
-        case .bts:        return "BTS"
+        case .ct:         return "CT"
         case .rs485:      return "RS485"
         case .usb:        return "USB"
-        case .bms:        return "BMS"
+        case .bts:        return "BTS"
         case .can:        return "CAN"
-        case .ct:         return "CT"
+        case .bms:        return "BMS"
+        }
+    }
+
+    /// 对应 Solar资料/图标橙色/ 中的资源文件编号（1-16）
+    var resourceIndex: Int {
+        switch self {
+        case .heartbeat:  return 1
+        case .bluetooth:  return 2
+        case .wifi:       return 3
+        case .fourG:      return 4
+        case .gps:        return 5
+        case .pvInput:    return 6
+        case .load:       return 9
+        case .battery:    return 7
+        case .grid:       return 8
+        case .generator:  return 10
+        case .ct:         return 11
+        case .rs485:      return 12
+        case .usb:        return 13
+        case .bts:        return 16
+        case .can:        return 15
+        case .bms:        return 14
         }
     }
 
@@ -86,11 +111,6 @@ enum HardwareIcon: Int, CaseIterable {
 
     var orangeImageName: String {
         return "hw_orange_\(rawValue)"
-    }
-
-    /// 状态旗标中的位元位置（从右边算起，0 为起始索引）
-    var statusBit: Int {
-        return rawValue
     }
 }
 

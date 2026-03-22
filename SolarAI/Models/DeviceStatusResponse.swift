@@ -29,7 +29,7 @@ struct DeviceStatusResponse: Codable {
         case gridCur = "grid_cur"
         case sload
         case pgrid
-        case pload = "Pload"
+        case pload = "pload"
         case inverterVolt = "inverter_volt"
         case inverterCur = "inverter_cur"
         case bmsSocVal = "bms_soc_val"

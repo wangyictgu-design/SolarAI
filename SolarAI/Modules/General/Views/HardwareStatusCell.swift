@@ -50,13 +50,15 @@ final class HardwareStatusCell: UICollectionViewCell {
         }
     }
 
-    /// 设定图示与启用状态
-    /// - Parameters:
-    ///   - icon: 硬件图示（含 grayImageName、orangeImageName、title）
-    ///   - isActive: 是否启用
     func configure(icon: HardwareIcon, isActive: Bool) {
-        let imageName = isActive ? icon.orangeImageName : icon.grayImageName
-        iconImageView.image = UIImage(named: imageName)
+        if isActive {
+            iconImageView.image = UIImage(named: icon.orangeImageName)
+            iconImageView.tintColor = nil
+        } else {
+            iconImageView.image = UIImage(named: icon.orangeImageName)?
+                .withRenderingMode(.alwaysTemplate)
+            iconImageView.tintColor = UIColor(white: 0.55, alpha: 1.0)
+        }
         titleLabel.text = icon.title
         titleLabel.textColor = isActive ? AppColors.accent : AppColors.textSecondary
     }

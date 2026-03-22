@@ -44,17 +44,22 @@ final class NetworkService {
 
         session.request(url, method: method)
             .validate(statusCode: 200..<300)
-            .responseDecodable(of: T.self) { response in
-                switch response.result {
-                case .success(let data):
-                    completion(.success(data))
-                case .failure(let error):
-                    if let data = response.data,
-                       let decoded = try? JSONDecoder().decode(T.self, from: data) {
-                        completion(.success(decoded))
-                    } else {
-                        completion(.failure(.requestFailed(error.localizedDescription)))
-                    }
+            .responseData { response in
+                if let data = response.data, let raw = String(data: data, encoding: .utf8) {
+                    print("📡 [\(endpoint)] Raw JSON: \(raw)")
+                }
+
+                guard let data = response.data else {
+                    completion(.failure(.noData))
+                    return
+                }
+
+                do {
+                    let decoded = try JSONDecoder().decode(T.self, from: data)
+                    completion(.success(decoded))
+                } catch {
+                    print("❌ [\(endpoint)] Decode error: \(error)")
+                    completion(.failure(.decodingFailed))
                 }
             }
     }
@@ -93,17 +98,22 @@ final class NetworkService {
 
         session.request(url, method: .post, parameters: parameters, encoding: URLEncoding.default)
             .validate(statusCode: 200..<300)
-            .responseDecodable(of: PaygoPasswordResponse.self) { response in
-                switch response.result {
-                case .success(let data):
-                    completion(.success(data))
-                case .failure(let error):
-                    if let data = response.data,
-                       let decoded = try? JSONDecoder().decode(PaygoPasswordResponse.self, from: data) {
-                        completion(.success(decoded))
-                    } else {
-                        completion(.failure(.requestFailed(error.localizedDescription)))
-                    }
+            .responseData { response in
+                if let data = response.data, let raw = String(data: data, encoding: .utf8) {
+                    print("📡 [POST \(APIEndpoint.password)] Raw JSON: \(raw)")
+                }
+
+                guard let data = response.data else {
+                    completion(.failure(.noData))
+                    return
+                }
+
+                do {
+                    let decoded = try JSONDecoder().decode(PaygoPasswordResponse.self, from: data)
+                    completion(.success(decoded))
+                } catch {
+                    print("❌ [POST \(APIEndpoint.password)] Decode error: \(error)")
+                    completion(.failure(.decodingFailed))
                 }
             }
     }

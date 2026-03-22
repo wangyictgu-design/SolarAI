@@ -173,7 +173,7 @@ extension GeneralViewController: UICollectionViewDataSource, UICollectionViewDel
             withReuseIdentifier: HardwareStatusCell.reuseIdentifier, for: indexPath
         ) as! HardwareStatusCell
         let icon = collectionView.tag == 0 ? connectIcons[indexPath.item] : hardwareIcons[indexPath.item]
-        let isActive = viewModel.activeHardwareModules.contains(icon.statusBit)
+        let isActive = viewModel.activeHardwareModules.contains(icon.rawValue)
         cell.configure(icon: icon, isActive: isActive)
         return cell
     }
