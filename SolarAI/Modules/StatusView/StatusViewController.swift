@@ -79,24 +79,24 @@ final class StatusViewController: UIViewController {
         let pvStack = makeStack([pvChargerPLabel, pvVoltLabel, pvChargerCurLabel], alignment: .trailing)
         view.addSubview(pvStack)
         pvStack.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(2)
-            make.trailing.equalTo(view.snp.trailing).multipliedBy(0.78)
+            make.top.equalToSuperview().offset(10)
+            make.trailing.equalTo(view.snp.trailing).multipliedBy(0.66)
         }
 
         // Grid 数据 — 电网塔旁边，PV 下方，使用百分比靠近图标
         let gridStack = makeStack([gridPLabel, gridCurLabel, gridVoltLabel], alignment: .trailing)
         view.addSubview(gridStack)
         gridStack.snp.makeConstraints { make in
-            make.top.equalTo(pvStack.snp.bottom).offset(8)
-            make.trailing.equalTo(view.snp.trailing).multipliedBy(0.88)
+            make.top.equalTo(pvStack.snp.bottom).offset(28)
+            make.trailing.equalTo(view.snp.trailing).multipliedBy(0.88).offset(-21)
         }
 
         // Invert 数据 — 逆变器旁边，往左上调整避免与图标重叠
         let invertStack = makeStack([invertVoltLabel, invertCurLabel], alignment: .trailing)
         view.addSubview(invertStack)
         invertStack.snp.makeConstraints { make in
-            make.centerY.equalToSuperview().offset(-35)
-            make.trailing.equalTo(view.snp.trailing).multipliedBy(0.65)
+            make.centerY.equalToSuperview().offset(-15)
+            make.trailing.equalTo(view.snp.trailing).multipliedBy(0.68)
         }
 
         // Batt 数据 — 电池旁边，使用百分比定位往上贴近电池图标
@@ -104,7 +104,7 @@ final class StatusViewController: UIViewController {
         view.addSubview(battStack)
         battStack.snp.makeConstraints { make in
             make.bottom.equalTo(view.snp.bottom).multipliedBy(0.86)
-            make.leading.equalTo(view.snp.trailing).multipliedBy(0.65)
+            make.leading.equalTo(view.snp.trailing).multipliedBy(0.674)
         }
 
         // Load 数据 — 房子下方，底部中间偏左

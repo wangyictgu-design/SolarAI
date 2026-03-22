@@ -135,6 +135,17 @@ final class ConnectionViewController: UIViewController {
         return btn
     }()
 
+    /// 测试入口按钮（跳过WiFi连接直接进入主页）
+    private let testButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setTitle("Test Entry", for: .normal)
+        btn.setTitleColor(.white, for: .normal)
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+        btn.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.8)
+        btn.layer.cornerRadius = 14
+        return btn
+    }()
+
     // MARK: - 右侧面板
 
     /// 右侧浅灰面板
@@ -362,6 +373,15 @@ final class ConnectionViewController: UIViewController {
             make.centerX.equalToSuperview()
             make.width.equalTo(180)
             make.height.equalTo(40)
+        }
+
+        // 测试入口按钮
+        formContainer.addSubview(testButton)
+        testButton.snp.makeConstraints { make in
+            make.top.equalTo(connectButton.snp.bottom).offset(12)
+            make.centerX.equalToSuperview()
+            make.width.equalTo(120)
+            make.height.equalTo(28)
             make.bottom.equalToSuperview()
         }
 
@@ -378,6 +398,7 @@ final class ConnectionViewController: UIViewController {
         refreshButton.addTarget(self, action: #selector(refreshTapped), for: .touchUpInside)
         togglePasswordButton.addTarget(self, action: #selector(togglePasswordVisibility), for: .touchUpInside)
         returnButton.addTarget(self, action: #selector(returnTapped), for: .touchUpInside)
+        testButton.addTarget(self, action: #selector(testEntryTapped), for: .touchUpInside)
 
         NotificationCenter.default.addObserver(
             self, selector: #selector(appWillEnterForeground),
@@ -420,6 +441,10 @@ final class ConnectionViewController: UIViewController {
     }
 
     @objc private func returnTapped() {}
+
+    @objc private func testEntryTapped() {
+        navigateToMain(deviceName: "TestDevice")
+    }
 
     @objc private func appWillEnterForeground() {
         viewModel.appDidBecomeActive()
