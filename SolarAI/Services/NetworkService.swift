@@ -10,10 +10,10 @@ enum NetworkError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidURL: return "无效的 URL"
-        case .requestFailed(let msg): return "请求失败: \(msg)"
-        case .decodingFailed: return "资料解析失败"
-        case .noData: return "无回应资料"
+        case .invalidURL: return "Invalid URL"
+        case .requestFailed(let msg): return "Request failed: \(msg)"
+        case .decodingFailed: return "Data parsing failed"
+        case .noData: return "No response data"
         }
     }
 }
@@ -45,9 +45,11 @@ final class NetworkService {
         session.request(url, method: method)
             .validate(statusCode: 200..<300)
             .responseData { response in
+                #if DEBUG
                 if let data = response.data, let raw = String(data: data, encoding: .utf8) {
                     print("📡 [\(endpoint)] Raw JSON: \(raw)")
                 }
+                #endif
 
                 guard let data = response.data else {
                     completion(.failure(.noData))
@@ -58,7 +60,9 @@ final class NetworkService {
                     let decoded = try JSONDecoder().decode(T.self, from: data)
                     completion(.success(decoded))
                 } catch {
+                    #if DEBUG
                     print("❌ [\(endpoint)] Decode error: \(error)")
+                    #endif
                     completion(.failure(.decodingFailed))
                 }
             }
@@ -99,9 +103,11 @@ final class NetworkService {
         session.request(url, method: .post, parameters: parameters, encoding: URLEncoding.default)
             .validate(statusCode: 200..<300)
             .responseData { response in
+                #if DEBUG
                 if let data = response.data, let raw = String(data: data, encoding: .utf8) {
                     print("📡 [POST \(APIEndpoint.password)] Raw JSON: \(raw)")
                 }
+                #endif
 
                 guard let data = response.data else {
                     completion(.failure(.noData))
@@ -112,7 +118,9 @@ final class NetworkService {
                     let decoded = try JSONDecoder().decode(PaygoPasswordResponse.self, from: data)
                     completion(.success(decoded))
                 } catch {
+                    #if DEBUG
                     print("❌ [POST \(APIEndpoint.password)] Decode error: \(error)")
+                    #endif
                     completion(.failure(.decodingFailed))
                 }
             }

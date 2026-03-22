@@ -135,6 +135,7 @@ final class ConnectionViewController: UIViewController {
         return btn
     }()
 
+    #if DEBUG
     /// 测试入口按钮（跳过WiFi连接直接进入主页）
     private let testButton: UIButton = {
         let btn = UIButton(type: .system)
@@ -145,6 +146,7 @@ final class ConnectionViewController: UIViewController {
         btn.layer.cornerRadius = 14
         return btn
     }()
+    #endif
 
     // MARK: - 右侧面板
 
@@ -374,6 +376,7 @@ final class ConnectionViewController: UIViewController {
             make.height.equalTo(40)
         }
 
+        #if DEBUG
         // 测试入口按钮
         formContainer.addSubview(testButton)
         testButton.snp.makeConstraints { make in
@@ -383,6 +386,11 @@ final class ConnectionViewController: UIViewController {
             make.height.equalTo(28)
             make.bottom.equalToSuperview()
         }
+        #else
+        connectButton.snp.makeConstraints { make in
+            make.bottom.equalToSuperview()
+        }
+        #endif
 
         // 载入遮罩
         loadingView.snp.makeConstraints { make in
@@ -397,7 +405,9 @@ final class ConnectionViewController: UIViewController {
         refreshButton.addTarget(self, action: #selector(refreshTapped), for: .touchUpInside)
         togglePasswordButton.addTarget(self, action: #selector(togglePasswordVisibility), for: .touchUpInside)
         returnButton.addTarget(self, action: #selector(returnTapped), for: .touchUpInside)
+        #if DEBUG
         testButton.addTarget(self, action: #selector(testEntryTapped), for: .touchUpInside)
+        #endif
 
         NotificationCenter.default.addObserver(
             self, selector: #selector(appWillEnterForeground),
@@ -443,9 +453,11 @@ final class ConnectionViewController: UIViewController {
         UIApplication.shared.perform(#selector(NSXPCConnection.suspend))
     }
 
+    #if DEBUG
     @objc private func testEntryTapped() {
         navigateToMain(deviceName: "TestDevice")
     }
+    #endif
 
     @objc private func appWillEnterForeground() {
         viewModel.appDidBecomeActive()

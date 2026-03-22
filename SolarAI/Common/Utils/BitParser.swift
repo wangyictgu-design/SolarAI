@@ -90,12 +90,9 @@ enum BitParser {
 
     // MARK: - SINT 转换（用于 pgrid）
 
-    /// 使用二补数将无符号 16 位值转换为有符号
+    /// 将无符号 16 位值转换为有符号（标准 SINT16 二补数）
     static func toSigned16(_ value: Int) -> Int {
-        if value <= 0 {
-            return value
-        }
-        let inverted = (~value) & 0xFFFF
-        return -(inverted + 1)
+        let uint16 = UInt16(clamping: value)
+        return Int(Int16(bitPattern: uint16))
     }
 }

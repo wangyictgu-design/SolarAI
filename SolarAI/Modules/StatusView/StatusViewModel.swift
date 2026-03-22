@@ -39,12 +39,13 @@ final class StatusViewModel {
         // 获取 arrow_flag 以显示流向动画
         group.enter()
         NetworkService.shared.fetchGeneral { [weak self] result in
+            guard let self = self else { group.leave(); return }
             if case .success(let response) = result {
                 let flowType = BitParser.parseArrowFlag(response.arrowFlag)
-                if self?.currentFlowType != flowType {
-                    self?.currentFlowType = flowType
+                if self.currentFlowType != flowType {
+                    self.currentFlowType = flowType
                     DispatchQueue.main.async {
-                        self?.delegate?.statusViewModelDidUpdateFlow(self!, flowType: flowType)
+                        self.delegate?.statusViewModelDidUpdateFlow(self, flowType: flowType)
                     }
                 }
             }
@@ -54,12 +55,13 @@ final class StatusViewModel {
         // 获取设备状态以显示资料标签
         group.enter()
         NetworkService.shared.fetchDeviceStatus { [weak self] result in
+            guard let self = self else { group.leave(); return }
             switch result {
             case .success(let response):
-                self?.deviceStatus = response
+                self.deviceStatus = response
             case .failure(let error):
                 DispatchQueue.main.async {
-                    self?.delegate?.statusViewModel(self!, didFailWithError: error.localizedDescription)
+                    self.delegate?.statusViewModel(self, didFailWithError: error.localizedDescription)
                 }
             }
             group.leave()
