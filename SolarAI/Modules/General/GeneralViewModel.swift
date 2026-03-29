@@ -12,7 +12,8 @@ protocol GeneralViewModelDelegate: AnyObject {
 /// 2. 解析 arrow_flag bits 0-3 判断 PV/Load/Battery/Grid 是否存在
 /// 3. 解析 devStatus.batt_type 判断 BMS 是否活跃
 /// 4. 汇总所有数据源，输出 activeHardwareModules 集合供 UI 判断图标高亮
-/// 5. 解析 dev_version 构建设备版本号字符串
+/// 5. /general.do 成功 → Bluetooth 高亮；失败 → 清空 activeHardwareModules 并刷新 UI
+/// 6. 解析 dev_version 构建设备版本号字符串
 final class GeneralViewModel {
 
     weak var delegate: GeneralViewModelDelegate?
@@ -69,6 +70,10 @@ final class GeneralViewModel {
             guard let self = self else { return }
 
             guard let general = generalResp else {
+                self.activeHardwareModules = []
+                self.isHeartbeatActive = false
+                self.deviceVersion = "--"
+                self.delegate?.generalViewModelDidUpdateData(self)
                 self.delegate?.generalViewModel(self, didFailWithError: "获取设备数据失败")
                 return
             }
@@ -88,7 +93,7 @@ final class GeneralViewModel {
     /// - arrow_flag bits 0-3: PV / Load / Battery / Grid 存在标志
     /// - general.status: Heartbeat 状态（0 = 活跃）
     /// - devStatus.batt_type: BMS 状态（== 2 表示锂电池 BMS 活跃）
-    /// - WiFi: 始终活跃（App 通过 WiFi 与设备通讯）
+    /// - Bluetooth: /general.do 成功即高亮（本方法仅在成功解析后调用）
     private func buildHardwareStatus(general: GeneralResponse, devStatus: DeviceStatusResponse?) {
         var modules = Set<Int>()
 
@@ -98,8 +103,8 @@ final class GeneralViewModel {
             modules.insert(HardwareIcon.heartbeat.rawValue)
         }
 
-        // WiFi: 既然能请求到数据，说明 WiFi 已连接
-        modules.insert(HardwareIcon.wifi.rawValue)
+        // Bluetooth: /general.do 成功 ↔ 与设备 HTTP 通讯正常
+        modules.insert(HardwareIcon.bluetooth.rawValue)
 
         // arrow_flag bits 0-3: 硬件存在标志
         let hw = BitParser.parseHardwareExistence(general.arrowFlag)
