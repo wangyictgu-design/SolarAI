@@ -1,6 +1,6 @@
 name: SolarAI
 options:
-  bundleIdPrefix: com.skysafe
+  bundleIdPrefix: com.solarai
   deploymentTarget:
     iOS: "15.0"
   xcodeVersion: "15.0"
@@ -13,7 +13,7 @@ settings:
     DEVELOPMENT_TEAM: ""
     TARGETED_DEVICE_FAMILY: "1,2"
     INFOPLIST_FILE: SolarAI/Application/Info.plist
-    PRODUCT_BUNDLE_IDENTIFIER: com.skysafe.solarai
+    PRODUCT_BUNDLE_IDENTIFIER: com.solarai.inverter
     SWIFT_VERSION: "5.0"
     CODE_SIGN_STYLE: Automatic
     IPHONEOS_DEPLOYMENT_TARGET: "15.0"
