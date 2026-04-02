@@ -13,7 +13,7 @@ final class PaygoViewController: UIViewController {
     /// 背景图片
     private let backgroundImageView: UIImageView = {
         let iv = UIImageView()
-        iv.image = UIImage(named: "input_code_bg")
+        iv.image = UIImage(named: "input_code_bg2")
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
         iv.alpha = 0.3

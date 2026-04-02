@@ -23,8 +23,8 @@ cp "$SRC/流动图组/no_connect.png" "$DEST/no_connect.imageset/no_connect.png"
 echo "  [OK] No connect diagram"
 
 # PAYGO background
-cp "$SRC/流动图组/input_code/input_code_bg.png" "$DEST/input_code_bg.imageset/input_code_bg.png"
-echo "  [OK] PAYGO background"
+cp "$SRC/流动图组/input_code/input_code_bg2.png" "$DEST/input_code_bg2.imageset/input_code_bg2.png"
+echo "  [OK] PAYGO background (input_code_bg2)"
 
 # Flow animation frames
 copy_flow() {
