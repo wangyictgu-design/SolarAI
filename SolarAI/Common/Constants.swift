@@ -38,6 +38,8 @@ enum AppColors {
     /// 顶部 Tab 未选中：与 `background` 相同，保证整页底色统一为 #1a343d
     static let tabNormal = background
     static let inputBackground = UIColor(hex: "#253545")
+    /// Tab 之间竖向虚线、底部分割线
+    static let tabBarDivider = UIColor(white: 1, alpha: 0.32)
 }
 
 // MARK: - 硬件图标名称

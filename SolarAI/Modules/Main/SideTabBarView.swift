@@ -29,14 +29,20 @@ final class TopTabBarView: UIView {
         return btn
     }()
 
-    /// 水平堆叠视图，放置四个等宽标签按钮
-    private let tabStackView: UIStackView = {
+    /// Tab 行：[竖线][按钮][竖线][按钮]… 首条竖线即 Connected 与 General 之间的分隔
+    private let tabRowStack: UIStackView = {
         let sv = UIStackView()
         sv.axis = .horizontal
         sv.spacing = 0
-        sv.distribution = .fillEqually
+        sv.distribution = .fill
         sv.alignment = .fill
         return sv
+    }()
+
+    private let bottomHairline: UIView = {
+        let v = UIView()
+        v.backgroundColor = AppColors.tabBarDivider
+        return v
     }()
 
     private var tabButtons: [UIButton] = []
@@ -61,7 +67,8 @@ final class TopTabBarView: UIView {
         backgroundColor = AppColors.background
 
         addSubview(connectedButton)
-        addSubview(tabStackView)
+        addSubview(tabRowStack)
+        addSubview(bottomHairline)
 
         // 左侧按钮：宽度 140，其余填满剩余空间
         connectedButton.snp.makeConstraints { make in
@@ -69,20 +76,34 @@ final class TopTabBarView: UIView {
             make.width.equalTo(140)
         }
 
-        tabStackView.snp.makeConstraints { make in
+        tabRowStack.snp.makeConstraints { make in
             make.leading.equalTo(connectedButton.snp.trailing)
             make.top.trailing.bottom.equalToSuperview()
+        }
+
+        bottomHairline.snp.makeConstraints { make in
+            make.leading.trailing.bottom.equalToSuperview()
+            make.height.equalTo(1 / UIScreen.main.scale)
         }
 
         configureConnectedButtonChrome()
         applyConnectedSubtitleToButton()
         connectedButton.addTarget(self, action: #selector(connectedTapped), for: .touchUpInside)
 
-        // 创建四个等宽标签按钮
+        // Tab 行：竖线 + 等分宽按钮
         for (index, title) in tabs.enumerated() {
+            tabRowStack.addArrangedSubview(VerticalTabSeparatorView())
             let button = createTabButton(title: title, index: index)
             tabButtons.append(button)
-            tabStackView.addArrangedSubview(button)
+            tabRowStack.addArrangedSubview(button)
+        }
+
+        if let firstTab = tabButtons.first {
+            for btn in tabButtons.dropFirst() {
+                btn.snp.makeConstraints { make in
+                    make.width.equalTo(firstTab)
+                }
+            }
         }
 
         updateSelection(index: 0, animated: false)
@@ -172,5 +193,44 @@ final class TopTabBarView: UIView {
 
     @objc private func connectedTapped() {
         delegate?.topTabBarViewDidTapConnected(self)
+    }
+}
+
+// MARK: - 竖向实线分隔
+
+/// Tab 之间的竖向实线，通顶通底，与底部分割线相接无间断
+private final class VerticalTabSeparatorView: UIView {
+
+    private let shapeLayer = CAShapeLayer()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isUserInteractionEnabled = false
+        backgroundColor = .clear
+        shapeLayer.strokeColor = AppColors.tabBarDivider.cgColor
+        shapeLayer.lineWidth = 1
+        shapeLayer.lineCap = .butt
+        shapeLayer.fillColor = nil
+        layer.addSublayer(shapeLayer)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override var intrinsicContentSize: CGSize {
+        CGSize(width: 1, height: UIView.noIntrinsicMetric)
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        let midX = bounds.midX
+        let y1: CGFloat = 0
+        let y2 = max(y1 + 1, bounds.height)
+        let path = UIBezierPath()
+        path.move(to: CGPoint(x: midX, y: y1))
+        path.addLine(to: CGPoint(x: midX, y: y2))
+        shapeLayer.frame = bounds
+        shapeLayer.path = path.cgPath
     }
 }
