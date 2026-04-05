@@ -17,13 +17,37 @@ final class ConnectionViewController: UIViewController {
 
     private let viewModel = ConnectionViewModel()
 
+    /// BT NAME / BT PASSWORD 下方横线高度（pt）
+    private let formFieldUnderlineHeight: CGFloat = 2
+
     // MARK: - UI 组件
 
-    /// 左侧背景图
+    /// 左侧插图裁剪区（底色素材与 `login_bg`）
+    private let loginHeroClipContainer: UIView = {
+        let v = UIView()
+        v.clipsToBounds = true
+        v.backgroundColor = AppColors.connectionWelcomeBackground
+        return v
+    }()
+
+    /// 左栏（整块底色素材区）相对安全区外沿留白，避免贴屏幕上下左（与稿一致）
+    private let loginHeroOuterMargin: CGFloat = 16
+
+    /// `login_bg` 在左栏内的内边距（与栏边再留一层呼吸空间）
+    private let loginHeroEdgeInset: CGFloat = 18
+
+    /// 承载 `login_bg` 的内框（上/左/下内缩；图在框内纵横居中）
+    private let loginHeroImageLayoutContainer: UIView = {
+        let v = UIView()
+        v.clipsToBounds = true
+        v.backgroundColor = .clear
+        return v
+    }()
+
+    /// 左侧背景图（资源 1080×720；scaleAspectFit 保持宽高比，在可用区域内垂直/水平居中）
     private let backgroundImageView: UIImageView = {
         let iv = UIImageView()
-        iv.contentMode = .scaleAspectFill
-        iv.clipsToBounds = true
+        iv.contentMode = .scaleAspectFit
         iv.image = UIImage(named: "login_bg")
         return iv
     }()
@@ -56,7 +80,7 @@ final class ConnectionViewController: UIViewController {
         let label = UILabel()
         label.text = "version:\(AppConfig.appVersion)"
         label.font = UIFont.systemFont(ofSize: 12)
-        label.textColor = AppColors.textSecondary
+        label.textColor = .white
         return label
     }()
 
@@ -68,7 +92,7 @@ final class ConnectionViewController: UIViewController {
         let label = UILabel()
         label.text = "BT NAME:"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        label.textColor = AppColors.textSecondary
+        label.textColor = AppColors.pureWhite
         return label
     }()
 
@@ -83,7 +107,8 @@ final class ConnectionViewController: UIViewController {
 
     private let btNameUnderline: UIView = {
         let v = UIView()
-        v.backgroundColor = AppColors.separator
+        v.backgroundColor = AppColors.pureWhite
+        v.isOpaque = true
         return v
     }()
 
@@ -91,7 +116,7 @@ final class ConnectionViewController: UIViewController {
         let label = UILabel()
         label.text = "BT PASSWORD:"
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        label.textColor = AppColors.textSecondary
+        label.textColor = AppColors.pureWhite
         return label
     }()
 
@@ -112,26 +137,26 @@ final class ConnectionViewController: UIViewController {
         let btn = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 16)
         btn.setImage(UIImage(systemName: "eye.slash.fill", withConfiguration: config), for: .normal)
-        btn.tintColor = AppColors.textSecondary
+        btn.tintColor = .white
         return btn
     }()
 
     private let passwordUnderline: UIView = {
         let v = UIView()
-        v.backgroundColor = AppColors.separator
+        v.backgroundColor = AppColors.pureWhite
+        v.isOpaque = true
         return v
     }()
 
-    /// 橙色描边连接按钮
+    /// 实心橙底白字主按钮（参考设计稿）
     private let connectButton: UIButton = {
-        let btn = UIButton(type: .system)
+        let btn = UIButton(type: .custom)
         btn.setTitle("Click to connect", for: .normal)
-        btn.setTitleColor(AppColors.accent, for: .normal)
+        btn.setTitleColor(.white, for: .normal)
         btn.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
-        btn.backgroundColor = .clear
+        btn.backgroundColor = AppColors.connectButtonFill
         btn.layer.cornerRadius = 20
-        btn.layer.borderWidth = 1.5
-        btn.layer.borderColor = AppColors.accent.cgColor
+        btn.layer.borderWidth = 0
         return btn
     }()
 
@@ -250,9 +275,11 @@ final class ConnectionViewController: UIViewController {
     // MARK: - UI 布局
 
     private func setupUI() {
-        view.backgroundColor = AppColors.background
+        view.backgroundColor = AppColors.connectionWelcomeBackground
 
-        view.addSubview(backgroundImageView)
+        view.addSubview(loginHeroClipContainer)
+        loginHeroClipContainer.addSubview(loginHeroImageLayoutContainer)
+        loginHeroImageLayoutContainer.addSubview(backgroundImageView)
         view.addSubview(returnButton)
         view.addSubview(titleLabel)
         view.addSubview(versionLabel)
@@ -316,10 +343,19 @@ final class ConnectionViewController: UIViewController {
             make.bottom.lessThanOrEqualTo(rightPanel.safeAreaLayoutGuide).offset(-12)
         }
 
-        // 左侧背景图
+        // 左侧青绿栏：外沿对齐安全区留白；右缘对齐屏幕水平中心，保证右半仍为表单区
+        loginHeroClipContainer.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(loginHeroOuterMargin)
+            make.leading.equalTo(view.safeAreaLayoutGuide).offset(loginHeroOuterMargin)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-loginHeroOuterMargin)
+            make.trailing.equalTo(view.snp.centerX)
+        }
+        loginHeroImageLayoutContainer.snp.makeConstraints { make in
+            make.top.leading.bottom.equalToSuperview().inset(loginHeroEdgeInset)
+            make.trailing.equalToSuperview()
+        }
         backgroundImageView.snp.makeConstraints { make in
-            make.top.leading.bottom.equalToSuperview()
-            make.width.equalToSuperview().multipliedBy(0.50)
+            make.edges.equalToSuperview()
         }
 
         // 返回按钮
@@ -331,20 +367,21 @@ final class ConnectionViewController: UIViewController {
 
         // 标题 + 版本（左下角）
         versionLabel.snp.makeConstraints { make in
-            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-8)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(2)
             make.leading.equalTo(view.safeAreaLayoutGuide).offset(20)
         }
 
         titleLabel.snp.makeConstraints { make in
+            make.centerX.equalTo(backgroundImageView)
             make.bottom.equalTo(versionLabel.snp.top).offset(-4)
-            make.leading.equalTo(view.safeAreaLayoutGuide).offset(20)
+            make.leading.greaterThanOrEqualTo(view.safeAreaLayoutGuide).offset(16)
             make.trailing.lessThanOrEqualTo(formContainer.snp.leading).offset(-10)
         }
 
         // 表单区域（背景图和右侧面板之间）
         formContainer.snp.makeConstraints { make in
             make.centerY.equalToSuperview().offset(-10)
-            make.leading.equalTo(backgroundImageView.snp.trailing).offset(24)
+            make.leading.equalTo(loginHeroClipContainer.snp.trailing).offset(24)
             make.trailing.equalTo(rightPanel.snp.leading).offset(-24)
         }
 
@@ -362,7 +399,7 @@ final class ConnectionViewController: UIViewController {
         btNameUnderline.snp.makeConstraints { make in
             make.top.equalTo(btNameValueLabel.snp.bottom).offset(8)
             make.leading.trailing.equalToSuperview()
-            make.height.equalTo(0.5)
+            make.height.equalTo(formFieldUnderlineHeight)
         }
 
         // BT PASSWORD
@@ -390,7 +427,7 @@ final class ConnectionViewController: UIViewController {
         passwordUnderline.snp.makeConstraints { make in
             make.top.equalTo(passwordField.snp.bottom).offset(8)
             make.leading.trailing.equalToSuperview()
-            make.height.equalTo(0.5)
+            make.height.equalTo(formFieldUnderlineHeight)
         }
 
         // 连接按钮
@@ -416,6 +453,9 @@ final class ConnectionViewController: UIViewController {
             make.bottom.equalToSuperview()
         }
         #endif
+
+        formContainer.bringSubviewToFront(btNameUnderline)
+        formContainer.bringSubviewToFront(passwordUnderline)
 
         // 加载遮罩
         loadingView.snp.makeConstraints { make in

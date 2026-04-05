@@ -24,12 +24,17 @@ enum APIEndpoint {
 
 enum AppColors {
     static let background = UIColor(hex: "#1a343d")
+    /// 连接页左侧图 + 中间表单区域底色（参考设计稿 #1c2e35）
+    static let connectionWelcomeBackground = UIColor(hex: "#1c2e35")
+    /// 连接页「Click to connect」实心按钮橙（参考设计稿 #f58220）
+    static let connectButtonFill = UIColor(hex: "#f58220")
     static let accent = UIColor(hex: "#C56A02")
     static let accentGradientStart = UIColor(hex: "#FF8C00")
     static let accentGradientEnd = UIColor(hex: "#FFA500")
     static let error = UIColor(hex: "#FF4444")
     static let confirm = UIColor(hex: "#00BFA5")
     static let textPrimary = UIColor.white
+    static let pureWhite = UIColor(hex: "#FFFFFF")
     static let textSecondary = UIColor(white: 0.65, alpha: 1.0)
     static let separator = UIColor(white: 0.3, alpha: 1.0)
     static let cardBackground = UIColor(hex: "#1C2B3A")
