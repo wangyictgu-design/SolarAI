@@ -20,6 +20,9 @@ final class ConnectionViewController: UIViewController {
     /// BT NAME / BT PASSWORD 下方横线高度（pt）
     private let formFieldUnderlineHeight: CGFloat = 2
 
+    /// Return、版本号等相对安全区左缘的间距（安全区 + 该值）
+    private let safeAreaLeadingInset: CGFloat = 10
+
     // MARK: - UI 组件
 
     /// 左侧插图裁剪区（底色素材与 `login_bg`）
@@ -361,20 +364,20 @@ final class ConnectionViewController: UIViewController {
         // 返回按钮
         returnButton.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(4)
-            make.leading.equalTo(view.safeAreaLayoutGuide).offset(12)
+            make.leading.equalTo(view.safeAreaLayoutGuide).offset(safeAreaLeadingInset)
             make.height.equalTo(30)
         }
 
         // 标题 + 版本（左下角）
         versionLabel.snp.makeConstraints { make in
             make.bottom.equalTo(view.safeAreaLayoutGuide).offset(2)
-            make.leading.equalTo(view.safeAreaLayoutGuide).offset(20)
+            make.leading.equalTo(view.safeAreaLayoutGuide).offset(safeAreaLeadingInset)
         }
 
         titleLabel.snp.makeConstraints { make in
             make.centerX.equalTo(backgroundImageView)
             make.bottom.equalTo(versionLabel.snp.top).offset(-4)
-            make.leading.greaterThanOrEqualTo(view.safeAreaLayoutGuide).offset(16)
+            make.leading.greaterThanOrEqualTo(view.safeAreaLayoutGuide).offset(safeAreaLeadingInset)
             make.trailing.lessThanOrEqualTo(formContainer.snp.leading).offset(-10)
         }
 
