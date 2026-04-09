@@ -4,8 +4,8 @@ import Foundation
 ///
 /// 协议要求：
 /// - 电压/电流类字段（pv1_volt, grid_volt, batt_volt, grid_cur, inverter_volt, inverter_cur）需 ÷ 10.0
-/// - 功率类字段（pv1_charger_pwr, pload）直接显示
-/// - pgrid 特殊处理：> 0 时做 SINT16 转换
+/// - 功率类字段 pv1_charger_pwr 直接显示
+/// - pgrid、pload：均按 SINT16（16 位二补数）解析后显示（协议 20260112）
 /// - Total kWh = pwr_total_h_load * 1000 + pwr_total_l_load * 0.1
 enum DataFormatter {
 
@@ -38,16 +38,21 @@ enum DataFormatter {
         return String(format: "%.1f kwh", total)
     }
 
-    /// 电网功率 pgrid：≤0 直接显示；>0 时做 SINT16 二补数转换后显示
-    /// 协议原文："上传数据小于等于0直接显示，大于0时采用SINT解析后显示"
-    static func formatGridPower(_ rawValue: Int) -> String {
-        let displayValue: Int
-        if rawValue <= 0 {
-            displayValue = rawValue
-        } else {
-            displayValue = BitParser.toSigned16(rawValue)
-        }
+    /// pgrid、pload：协议要求接到上传数据后按 SINT（16 位二补数）解析再显示。
+    /// 设备若已用 JSON 负数表示，则不再重复套用 16 位解释。
+    static func formatSint16PowerW(_ rawValue: Int) -> String {
+        let displayValue = rawValue < 0 ? rawValue : BitParser.toSigned16(rawValue)
         return "\(displayValue) W"
+    }
+
+    /// 电网功率 Grid P（pgrid）
+    static func formatGridPower(_ rawValue: Int) -> String {
+        return formatSint16PowerW(rawValue)
+    }
+
+    /// 负载有功功率 PLoad（pload）
+    static func formatPloadPower(_ rawValue: Int) -> String {
+        return formatSint16PowerW(rawValue)
     }
 
     /// 格式化电池 SOC 百分比

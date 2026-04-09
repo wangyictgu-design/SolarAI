@@ -6,7 +6,7 @@ import Foundation
 /// 1. 解析 /general.do 返回的 arrow_flag 字段（16位）
 ///    - bits 0-3: 硬件存在标志（PV/Load/Battery/Grid）→ General 页图标高亮
 ///    - bits 4-9: 能量流向状态 → Status View 页动画选择
-/// 2. pgrid 字段的 SINT16（有符号16位整数）转换
+/// 2. pgrid、pload 字段的 SINT16（有符号 16 位整数）转换（协议 20260112 / devStatus.do）
 enum BitParser {
 
     /// 检查 16 位值中指定位是否为 1（bit 0 = 最低位，从右往左数）
@@ -98,12 +98,12 @@ enum BitParser {
         return .noConnect
     }
 
-    // MARK: - SINT 转换（用于 pgrid）
+    // MARK: - SINT 转换（用于 pgrid、pload）
 
-    /// 将无符号 16 位整数转换为有符号 16 位整数（SINT16 二补数）
+    /// 将设备上报的 16 位原始值按二补数解释为有符号整数（符号位 0 为正，1 为负）
     ///
-    /// 用途：pgrid 字段的显示转换。协议要求 pgrid > 0 时做 SINT16 解析。
-    /// 例：60000 (unsigned) → -5536 (signed)，34 (unsigned) → 34 (signed，bit15未置位)
+    /// 用途：`devStatus.do` 的 pgrid、pload 显示前均做此解析。
+    /// 例：60000 → -5536；34 → 34
     static func toSigned16(_ value: Int) -> Int {
         let uint16 = UInt16(clamping: value)
         return Int(Int16(bitPattern: uint16))
