@@ -357,10 +357,11 @@ extension HTTPHeader {
     ///
     /// See the [Accept-Encoding HTTP header documentation](https://tools.ietf.org/html/rfc7230#section-4.2.3) .
     public static let defaultAcceptEncoding: HTTPHeader = {
-        let encodings: [String] = if #available(iOS 11.0, macOS 10.13, tvOS 11.0, watchOS 4.0, *) {
-            ["br", "gzip", "deflate"]
+        let encodings: [String]
+        if #available(iOS 11.0, macOS 10.13, tvOS 11.0, watchOS 4.0, *) {
+            encodings = ["br", "gzip", "deflate"]
         } else {
-            ["gzip", "deflate"]
+            encodings = ["gzip", "deflate"]
         }
 
         return .acceptEncoding(encodings.qualityEncoded())
@@ -406,7 +407,7 @@ extension HTTPHeader {
                 #else
                 return "macOS"
                 #endif
-                #elseif os(visionOS)
+                #elseif swift(>=5.9.2) && os(visionOS)
                 return "visionOS"
                 #elseif os(Linux)
                 return "Linux"
@@ -414,8 +415,6 @@ extension HTTPHeader {
                 return "Windows"
                 #elseif os(Android)
                 return "Android"
-                #elseif os(WASI)
-                return "WASI"
                 #else
                 return "Unknown"
                 #endif

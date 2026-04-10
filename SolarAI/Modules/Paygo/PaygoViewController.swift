@@ -216,7 +216,7 @@ final class PaygoViewController: UIViewController {
         btn.layer.shadowOffset = CGSize(width: 0, height: 2)
         btn.layer.shadowRadius = 2
 
-        if title == "✕" || title == "✓" {
+        if title == "x" || title == "✓" {
             btn.backgroundColor = UIColor(white: 0.82, alpha: 1.0)
         }
 

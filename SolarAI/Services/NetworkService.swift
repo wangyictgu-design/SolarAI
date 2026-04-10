@@ -102,7 +102,7 @@ final class NetworkService {
     ) {
         let url = "\(AppConfig.baseURL)\(APIEndpoint.password)"
         // 与协议一致：默认未勾选 → code；勾选 Compatibility → pwd
-        let parameters: [String: Any] = {
+        let parameters: [String: String] = {
             if useCompatibility {
                 return ["pwd": code]
             } else {
@@ -114,7 +114,12 @@ final class NetworkService {
         print("📡 [POST \(APIEndpoint.password)] request url=\(url), useCompatibility=\(useCompatibility), parameters=\(parameters)")
         #endif
 
-        session.request(url, method: .post, parameters: parameters, encoding: URLEncoding.default)
+        session.request(
+            url,
+            method: .post,
+            parameters: parameters,
+            encoding: JSONEncoding.default
+        )
             .validate(statusCode: 200..<300)
             .responseData { response in
                 #if DEBUG

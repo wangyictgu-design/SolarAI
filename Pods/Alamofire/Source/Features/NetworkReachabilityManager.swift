@@ -33,14 +33,9 @@ import SystemConfiguration
 /// Reachability can be used to determine background information about why a network operation failed, or to retry
 /// network requests when a connection is established. It should not be used to prevent a user from initiating a network
 /// request, as it's possible that an initial request may be required to establish reachability.
-@available(macOS, deprecated: 14.4, message: "Use NWPathMonitor instead.")
-@available(iOS, deprecated: 17.4, message: "Use NWPathMonitor instead.")
-@available(watchOS, deprecated: 9.4, message: "Use NWPathMonitor instead.")
-@available(tvOS, deprecated: 17.4, message: "Use NWPathMonitor instead.")
-@available(visionOS, deprecated: 1.4, message: "Use NWPathMonitor instead.")
-open class NetworkReachabilityManager: @unchecked Sendable {
+open class NetworkReachabilityManager {
     /// Defines the various states of network reachability.
-    public enum NetworkReachabilityStatus: Equatable, Sendable {
+    public enum NetworkReachabilityStatus {
         /// It is unknown whether the network is reachable.
         case unknown
         /// The network is not reachable.
@@ -59,7 +54,7 @@ open class NetworkReachabilityManager: @unchecked Sendable {
         }
 
         /// Defines the various connection types detected by reachability flags.
-        public enum ConnectionType: Sendable {
+        public enum ConnectionType {
             /// The connection type is either over Ethernet or WiFi.
             case ethernetOrWiFi
             /// The connection type is a cellular connection.
@@ -69,7 +64,7 @@ open class NetworkReachabilityManager: @unchecked Sendable {
 
     /// A closure executed when the network reachability status changes. The closure takes a single argument: the
     /// network reachability status.
-    public typealias Listener = @Sendable (NetworkReachabilityStatus) -> Void
+    public typealias Listener = (NetworkReachabilityStatus) -> Void
 
     /// Default `NetworkReachabilityManager` for the zero address and a `listenerQueue` of `.main`.
     public static let `default` = NetworkReachabilityManager()
@@ -167,7 +162,6 @@ open class NetworkReachabilityManager: @unchecked Sendable {
     ///   - listener: `Listener` closure called when reachability changes.
     ///
     /// - Returns: `true` if listening was started successfully, `false` otherwise.
-    @preconcurrency
     @discardableResult
     open func startListening(onQueue queue: DispatchQueue = .main,
                              onUpdatePerforming listener: @escaping Listener) -> Bool {
@@ -242,7 +236,7 @@ open class NetworkReachabilityManager: @unchecked Sendable {
     func notifyListener(_ flags: SCNetworkReachabilityFlags) {
         let newStatus = NetworkReachabilityStatus(flags)
 
-        mutableState.write { [newStatus] state in
+        mutableState.write { state in
             guard state.previousStatus != newStatus else { return }
 
             state.previousStatus = newStatus
@@ -263,6 +257,8 @@ open class NetworkReachabilityManager: @unchecked Sendable {
 
 // MARK: -
 
+extension NetworkReachabilityManager.NetworkReachabilityStatus: Equatable {}
+
 extension SCNetworkReachabilityFlags {
     var isReachable: Bool { contains(.reachable) }
     var isConnectionRequired: Bool { contains(.connectionRequired) }
@@ -270,7 +266,7 @@ extension SCNetworkReachabilityFlags {
     var canConnectWithoutUserInteraction: Bool { canConnectAutomatically && !contains(.interventionRequired) }
     var isActuallyReachable: Bool { isReachable && (!isConnectionRequired || canConnectWithoutUserInteraction) }
     var isCellular: Bool {
-        #if os(iOS) || os(tvOS) || os(visionOS)
+        #if os(iOS) || os(tvOS) || (swift(>=5.9) && os(visionOS))
         return contains(.isWWAN)
         #else
         return false

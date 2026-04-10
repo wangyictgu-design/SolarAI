@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Run CocoaPods with Homebrew's portable Ruby (3.1+) so Xcodeproj supports object version 77+.
+# Usage from repo root: ./scripts/pod install
+set -euo pipefail
+
+export LANG="${LANG:-en_US.UTF-8}"
+export LC_ALL="${LC_ALL:-en_US.UTF-8}"
+
+brew_repo="$(brew --repository 2>/dev/null || true)"
+portable_ruby=""
+if [[ -n "$brew_repo" ]]; then
+  candidate="${brew_repo}/Library/Homebrew/vendor/portable-ruby/current/bin/ruby"
+  if [[ -x "$candidate" ]]; then
+    portable_ruby="$candidate"
+  fi
+fi
+
+if [[ -n "$portable_ruby" ]]; then
+  export GEM_HOME="$("$portable_ruby" -e 'puts Gem.user_dir')"
+  export GEM_PATH="$GEM_HOME"
+  exec "$portable_ruby" -rrubygems -e 'load Gem.bin_path("cocoapods", "pod")' -- "$@"
+fi
+
+exec pod "$@"
