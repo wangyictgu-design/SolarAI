@@ -14,6 +14,7 @@ def normalize_pbxproj_at_path_for_xcode15!(pbxproj_path)
   pbx = File.read(pbxproj_path)
   pbx.gsub!(/objectVersion = 77;/, 'objectVersion = 56;')
   # Xcode 15.4 crashes (IDEInspector / -[PBXProject preferredProjectFormat]) if Xcode 16-only keys remain.
+  pbx = pbx.lines.reject do |line|
     line.include?('minimizedProjectReferenceProxies =') || line.include?('preferredProjectObjectVersion =')
   end.join
   pbx.gsub!(/LastUpgradeCheck = 1600;/, 'LastUpgradeCheck = 1500;')
