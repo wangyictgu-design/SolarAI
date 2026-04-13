@@ -102,8 +102,7 @@ final class WiFiManager {
     // MARK: - 当前 WiFi 名称 (SSID)
 
     /// 当前已连接 WiFi 的 SSID。
-    /// - **必须**：Identifiers 里为 App ID 勾选 *Access WiFi Information* → 重新生成 **Provisioning Profile（如 SolarDev）** → 下载并在 Xcode 选用；
-    ///   再在 Target **Signing & Capabilities** → **+** → **Access WiFi Information**（向 `SolarAI.entitlements` 写入 `com.apple.developer.networking.wifi-info`）。缺任一步则始终为 `nil`，界面只能显示兜底名（如 SSE Device）。
+    /// - **必须**：(1) Apple Developer → Identifiers → 本 App ID 勾选 **Access WiFi Information**；(2) `SolarAI.entitlements` 含 `com.apple.developer.networking.wifi-info`；(3) Target Build Settings 中 **CODE_SIGN_ENTITLEMENTS** 指向该文件（勿留空）；(4) 重新生成并选用含该能力的 **Provisioning Profile**。缺任一项则 `CNCopyCurrentNetworkInfo` 在真机上多为 `nil`。
     /// - 首次若仍读不到，系统可能弹出**定位权限**（已配置 `NSLocationWhenInUseUsageDescription`），请允许后再试。
     /// - **模拟器**几乎无法拿到 SSID；请用**真机**且手机已连接该 Wi-Fi。
     func currentWiFiSSID() -> String? {

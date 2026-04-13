@@ -66,6 +66,11 @@
 	<string>Solar AI Inverter needs local network access to communicate with the inverter at 192.168.4.1.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>用于在已连接 Wi-Fi 时读取网络名称（SSID），并显示在界面左上角。</string>
+	<key>NSLocationTemporaryUsageDescriptionDictionary</key>
+	<dict>
+		<key>WiFiSSIDReason</key>
+		<string>系统需要暂时允许精确位置，才能读取当前所连 Wi-Fi 名称（SSID）；我们不会将位置用于其它用途。</string>
+	</dict>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

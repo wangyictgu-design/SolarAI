@@ -95,8 +95,26 @@ final class MainContainerViewController: UIViewController {
         return fallbackConnectedSubtitle
     }
 
-    /// 异步再取 SSID（NEHotspotNetwork）；失败则按需申请定位后重试（真机 + 描述文件含 WiFi 能力时通常能拿到）
+    /// 异步再取 SSID（NEHotspotNetwork）；失败则按需申请定位 / 精确位置后重试。
+    /// 需：`SolarAI.entitlements` 含 `wifi-info` + Xcode 已设置 CODE_SIGN_ENTITLEMENTS，且 App ID 勾选 Access WiFi Information。
     private func refreshConnectedWiFiNameAsync() {
+        if ssidLocationManager.authorizationStatus == .notDetermined {
+            ssidLocationManager.requestWhenInUseAuthorization()
+        }
+        if #available(iOS 14.0, *) {
+            let auth = ssidLocationManager.authorizationStatus
+            if auth == .authorizedWhenInUse || auth == .authorizedAlways,
+               ssidLocationManager.accuracyAuthorization == .reducedAccuracy {
+                ssidLocationManager.requestTemporaryFullAccuracyAuthorization(withPurposeKey: "WiFiSSIDReason") { [weak self] _ in
+                    self?.performFetchCurrentSSIDForTabBar()
+                }
+                return
+            }
+        }
+        performFetchCurrentSSIDForTabBar()
+    }
+
+    private func performFetchCurrentSSIDForTabBar() {
         WiFiManager.shared.fetchCurrentWiFiSSID { [weak self] ssid in
             DispatchQueue.main.async {
                 guard let self else { return }
@@ -179,7 +197,7 @@ extension MainContainerViewController: CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         switch manager.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
-            applySSIDOrFallbackToTabBar()
+            refreshConnectedWiFiNameAsync()
         default:
             break
         }
